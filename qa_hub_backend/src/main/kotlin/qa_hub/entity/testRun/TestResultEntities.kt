@@ -127,6 +127,7 @@ data class TestResultAttachment(
 
 object AttachmentTypes {
     val image = "image"
+    val text = "text"
 }
 
 enum class TestStatus(val status: String) {
@@ -140,6 +141,6 @@ enum class TestStatus(val status: String) {
             return listOf(SUCCESS.status, FAILURE.status).contains(status)
         }
 
-        val finalStatuses = values().map { it.status }.filter { isFinal(it) }
+        val finalStatuses = entries.map { it.status }.filter { isFinal(it) }
     }
 }

@@ -1,7 +1,6 @@
 package qa_hub.service.testResults.testStats
 
 
-import com.mongodb.client.model.Accumulators.last
 import kotlinx.coroutines.runBlocking
 import org.litote.kmongo.coroutine.aggregate
 import org.springframework.beans.factory.annotation.Autowired
@@ -10,6 +9,21 @@ import qa_hub.core.mongo.QaHubMongoClient
 import qa_hub.core.mongo.entity.Collections
 import org.litote.kmongo.*
 import qa_hub.entity.testRun.*
+
+data class GeneralStats(
+    val fullName: String,
+    val testcaseId: String,
+    val totalTestResults: Int,
+    val avgDuration: Double,
+    val avgRetries: Double,
+    val finalStatus: String,
+    var avgRetryDuration: Double,
+    val totalRetries:Int,
+    val successTestResults: Int,
+    val successRate: Double,
+    val successTestResultRate: Double,
+    val successTestRetryRate: Double,
+)
 
 @Service
 class GeneralStatsHelper {

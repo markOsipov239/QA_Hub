@@ -6,7 +6,8 @@ import qa_hub.entity.testRun.SingleTestStats
 import qa_hub.entity.testRun.TestHistoryRequest
 import qa_hub.entity.testRun.TestStats
 import qa_hub.entity.testRun.TestStatsRequest
-import qa_hub.service.testResults.TestStatsService
+import qa_hub.service.testResults.testStats.GeneralStats
+import qa_hub.service.testResults.testStats.TestStatsService
 
 @RestController
 @RequestMapping("/api/stats")
@@ -18,6 +19,11 @@ class TestStatsController {
     @PostMapping("")
     fun getStatsForProject(@RequestBody request: TestStatsRequest): List<TestStats> {
         return testStatsService.getStatsForProject(request)
+    }
+
+    @PostMapping("/general")
+    fun getGeneralStats(@RequestBody request: TestStatsRequest): GeneralStats {
+        return testStatsService.getGeneralStats(request)
     }
 
     @PostMapping("/alt")

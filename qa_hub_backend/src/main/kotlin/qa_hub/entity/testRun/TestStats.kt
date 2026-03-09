@@ -37,7 +37,8 @@ data class TestResultsFilter(
     val tag: String?,
     var takeLast: Int?,
     val environment: String?,
-    val search: String?
+    val search: String?,
+    val maxDays: Int?
 )
 
 data class TestStats(
