@@ -5,7 +5,7 @@ WORKDIR /home/gradle/src
 
 RUN gradle clean bootJar
 
-FROM openjdk:11
+FROM openjdk:11.0.16
 
 RUN mkdir /app
 COPY --from=builder /home/gradle/src/build/libs/*.jar /app/app.jar
