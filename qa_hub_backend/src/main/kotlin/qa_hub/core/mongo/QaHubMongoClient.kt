@@ -3,6 +3,7 @@ package qa_hub.core.mongo
 import com.mongodb.ConnectionString
 import com.mongodb.MongoClientSettings
 import com.mongodb.MongoCredential
+import org.apache.juli.logging.LogFactory
 import org.litote.kmongo.coroutine.CoroutineDatabase
 import org.litote.kmongo.coroutine.coroutine
 import org.litote.kmongo.reactivestreams.KMongo
@@ -11,9 +12,11 @@ import org.springframework.stereotype.Repository
 
 @Repository
 class QaHubMongoClient {
+    val logger =  LogFactory.getLog("MongoDbLogger")
+
     private val qaHubDb = "dbQaHub"
 
-    private val mongoHost = System.getenv("ENV_MONGO_QA_HUB_HOST")
+    private var mongoHost = System.getenv("ENV_MONGO_QA_HUB_HOST") ?: "mongodb://localhost:27017/"
     private val userName = System.getenv("ENV_MONGO_QA_HUB_LOGIN")
     private val userPass = System.getenv("ENV_MONGO_QA_HUB_PASSWORD")
     private val authSource = System.getenv("ENV_MONGO_QA_HUB_AUTH_SOURCE")
@@ -30,7 +33,10 @@ class QaHubMongoClient {
 
     val client = run {
         val builder = MongoClientSettings.builder()
-        builder.applyConnectionString(ConnectionString(mongoHost))
+        val connectionString = ConnectionString(mongoHost)
+        logger.info("Connecting to mongodb: $connectionString")
+
+        builder.applyConnectionString(connectionString)
         builder.retryWrites(false)
 
         if (!userName.isNullOrEmpty() && !userPass.isNullOrEmpty()) {
