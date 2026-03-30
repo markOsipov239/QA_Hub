@@ -9,12 +9,12 @@ services:
     ports:
       - '8080:8080'
     env_file:
-      - ../.config/env.txt
+      - ../.config/.env
     environment:
-      - ENV_MONGO_QA_HUB_HOST=$ENV_MONGO_QA_HUB_HOST
-      - ENV_MONGO_QA_HUB_LOGIN=$ENV_MONGO_QA_HUB_LOGIN
-      - ENV_MONGO_QA_HUB_PASSWORD=$ENV_MONGO_QA_HUB_PASSWORD
-      - ENV_ATTACHMENTS_DIR=$ENV_ATTACHMENTS_DIR
+      - ENV_MONGO_QA_HUB_HOST=${ENV_MONGO_QA_HUB_HOST}
+      - ENV_MONGO_QA_HUB_LOGIN=${ENV_MONGO_QA_HUB_LOGIN}
+      - ENV_MONGO_QA_HUB_PASSWORD=${ENV_MONGO_QA_HUB_PASSWORD}
+      - ENV_ATTACHMENTS_DIR=${ENV_ATTACHMENTS_DIR}
     networks: # Networks to join (Services on the same network can communicate with each other using their name)
       - qa_hub_network
     volumes:
