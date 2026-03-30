@@ -9,7 +9,7 @@ services:
     ports:
       - '3000:3000'
     env_file:
-      - ../.config/env
+      - ../.config/env.txt
     environment:
       - NEXT_PUBLIC_QA_HUB_BACKEND=$NEXT_PUBLIC_QA_HUB_BACKEND
     networks: # Networks to join (Services on the same network can communicate with each other using their name)
