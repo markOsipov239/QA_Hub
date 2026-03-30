@@ -9,7 +9,7 @@ services:
     ports:
       - '8080:8080'
     env_file:
-      - ../.config/env.txt
+      - ../.config/env
     environment:
       - ENV_MONGO_QA_HUB_HOST=$ENV_MONGO_QA_HUB_HOST
       - ENV_MONGO_QA_HUB_LOGIN=$ENV_MONGO_QA_HUB_LOGIN
