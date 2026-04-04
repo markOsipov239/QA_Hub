@@ -11,7 +11,11 @@ export default function AttachmentsPanel({ retry, selectedStep, setSelectedStep,
     const [selectedAttachment, setSelectedAttachment] = useState(null)
 
     useEffect(() => {
-        setAttachments(retry.statusHistory[retry.statusHistory.length - 1].attachments)
+        const retryAttachments = retry.statusHistory[retry.statusHistory.length - 1].attachments
+        setAttachments(retryAttachments)
+        if (retryAttachments.length > 0) {
+            setSelectedAttachment(retryAttachments[0])
+        }
     }, [retry.testRunId, retry.fullName, retry.retry])
 
     return <div style={{marginLeft: "15px", ...props.style}}>
