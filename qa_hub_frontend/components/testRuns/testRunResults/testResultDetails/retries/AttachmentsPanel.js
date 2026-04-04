@@ -7,11 +7,11 @@ import ScreenshotAttachmentPanel from "./logs/ScreenshotAttachmentPanel";
 
 export default function AttachmentsPanel({ retry, selectedStep, setSelectedStep, ...props }) {
 
-    const [attachments, setAttachments] = useState(retry.attachments)
+    const [attachments, setAttachments] = useState(retry.statusHistory[retry.statusHistory.length - 1].attachments)
     const [selectedAttachment, setSelectedAttachment] = useState(null)
 
     useEffect(() => {
-        setAttachments(retry.attachments)
+        setAttachments(retry.statusHistory[retry.statusHistory.length - 1].attachments)
     }, [retry.testRunId, retry.fullName, retry.retry])
 
     return <div style={{marginLeft: "15px", ...props.style}}>
