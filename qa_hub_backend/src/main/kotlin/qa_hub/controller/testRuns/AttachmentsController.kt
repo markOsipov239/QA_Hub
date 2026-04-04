@@ -52,15 +52,14 @@ class AttachmentsController {
         @RequestParam project: String,
         @RequestParam testRunId: String,
         @RequestParam fullName: String,
+        @RequestParam fileName: String,
         @RequestParam textFile: MultipartFile,
-        @RequestParam(required = false, defaultValue = "txt") extension: String
     ): TestResultAttachment {
         val path = "$textDir/testruns/$project/$testRunId/$fullName"
         val directory = File(path)
         if (!directory.exists()) {
             directory.mkdirs()
         }
-        val fileName = "${UUID.randomUUID()}.$extension"
         val file = File("$path/$fileName")
 
         val result = textFile.inputStream.copyTo(file.outputStream())
