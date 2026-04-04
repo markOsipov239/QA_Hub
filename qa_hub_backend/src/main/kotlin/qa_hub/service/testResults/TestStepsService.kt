@@ -51,6 +51,6 @@ class TestStepsService {
         var parentId: String?,
         var steps: List<TestStep> = listOf(),
         var result: String,
-        var duration: Int? = null
+        var duration: Double? = null
     )
 }
