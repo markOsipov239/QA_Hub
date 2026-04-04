@@ -52,7 +52,7 @@ class AttachmentsController {
         @RequestParam project: String,
         @RequestParam testRunId: String,
         @RequestParam fullName: String,
-        @RequestParam image: MultipartFile,
+        @RequestParam textFile: MultipartFile,
         @RequestParam(required = false, defaultValue = "txt") extension: String
     ): TestResultAttachment {
         val path = "$textDir/testruns/$project/$testRunId/$fullName"
@@ -63,9 +63,9 @@ class AttachmentsController {
         val fileName = "${UUID.randomUUID()}.$extension"
         val file = File("$path/$fileName")
 
-        val result = ImageIO.write(ImageIO.read(image.inputStream), extension, file)
+        val result = textFile.inputStream.copyTo(file.outputStream())
 
-        if (result) {
+        if (result > 0) {
             return TestResultAttachment(
                 type = AttachmentTypes.text,
                 path = "/api/attachments/text/${project}/${testRunId}/${fullName}/${fileName}",
@@ -108,7 +108,7 @@ class AttachmentsController {
     ): ResponseEntity<ByteArray> {
         val mediaType =  MediaType.TEXT_PLAIN
 
-        val filePath = "$imageDir/testruns/$project/$testRunId/$fullName/$fileName"
+        val filePath = "$textDir/testruns/$project/$testRunId/$fullName/$fileName"
         val file = File(filePath)
 
         return ResponseEntity.ok()
