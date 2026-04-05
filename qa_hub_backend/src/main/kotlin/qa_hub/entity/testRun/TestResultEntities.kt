@@ -94,6 +94,7 @@ data class TestResult(
 
     var status: String,
     var retries: Int = 0,
+    var localRetriesManagement: Boolean = false, //Allows to post test result with manual retries management. Useful when using local test queue manager.
 
     var startDate: String? = null,
     var endDate: String? = null,
