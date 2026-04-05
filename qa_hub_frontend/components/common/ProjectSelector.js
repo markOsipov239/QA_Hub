@@ -108,7 +108,7 @@ const ProjectSelector = observer(({style}) => {
 
       jobUrl = jobUrl.replace(`//${project}`, `/${project}`)
     } else if (cicdInt?.projectCicdInfo?.type === "GitLab") {
-      jobUrl = `${jobUrl}/${path}/${project}/~/pipelines`
+      jobUrl = `${jobUrl}/${path}/~/pipelines`
       jobUrl = jobUrl.replace(`//${path}`, `/${path}`)
     } else if (cicdInt?.projectCicdInfo?.type === "Teamcity") {
        jobUrl = `${jobUrl}/buildConfiguration/${jobId}`
