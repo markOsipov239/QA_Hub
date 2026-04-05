@@ -2,6 +2,8 @@ package qa_hub.service.integrations.cicd
 
 import qa_hub.entity.ProjectCicdInfo
 import qa_hub.service.integrations.cicd.github.GitHubService
+import qa_hub.service.integrations.cicd.gitlab.GitlabService
+import qa_hub.service.integrations.cicd.teamcity.TeamcityService
 
 data class CicdType(
     val cicdName: String,
@@ -12,7 +14,8 @@ enum class CicdTypes(
     val cicdType: CicdType
 ) {
     GITHUB(CicdType("GitHub")),
-    TESTRAIL(CicdType("GitLab"))
+    GITLAB(CicdType("GitLab")),
+    TEAMCITY(CicdType("Teamcity"))
 }
 
 enum class CicdAuthType(val authType: String) {
@@ -32,6 +35,8 @@ data class CicdInfo(
     fun cicdService(): CicdIntegrationAbstract? {
         return when (cicdType) {
             CicdTypes.GITHUB.cicdType.cicdName -> GitHubService(this)
+            CicdTypes.GITLAB.cicdType.cicdName -> GitlabService(this)
+            CicdTypes.TEAMCITY.cicdType.cicdName -> TeamcityService(this)
             else -> null
         }
     }

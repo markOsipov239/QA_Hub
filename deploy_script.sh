@@ -34,8 +34,8 @@ ENV_MONGO_QA_HUB_AUTH_SOURCE=""
 NEXT_PUBLIC_QA_HUB_BACKEND='http://23.123.123.123:8080'
 
 #Image storing
-ENV_HOST_IMAGE_DIR='$HOME/Images/QA_Hub'
-ENV_CONTAINER_IMAGE_DIR='/Images/QA_Hub'
+ENV_HOST_ATTACHMENTS_DIR='$HOME/QA_Hub/Attachments'
+ENV_CONTAINER_ATTACHMENTS_DIR='/QA_Hub/Attachments'
 
 SCRIPT_DIR=$(dirname "$(realpath $0)")
 
@@ -63,7 +63,7 @@ update_image qa_hub_frontend
 echo "\nDEPLOYING IMAGES"
 ssh $REMOTE_USER:$REMOTE_PASSWORD@$REMOTE_IP << EOF
     sudo -S <<< "$REMOTE_PASSWORD" rm ~/.docker/config.json
-    sudo mkdir -p "$ENV_HOST_IMAGE_DIR"
+    sudo mkdir -p "$ENV_HOST_ATTACHMENTS_DIR"
 
     security unlock-keychain -p "$REMOTE_PASSWORD"
     sudo docker login --username="$DOCKER_LOGIN" --password="$DOCKER_PASSWORD"
@@ -72,8 +72,8 @@ ssh $REMOTE_USER:$REMOTE_PASSWORD@$REMOTE_IP << EOF
     sudo docker rm qa_hub_backend 1>/dev/null || true
     sudo docker pull "$DOCKER_SPACE"/qa_hub_backend:latest || echo FAILED TO PULL qa_hub_backend && \
     sudo docker run -d -p $REMOTE_PORT_BACKEND:8080 --restart always --name qa_hub_backend \
-     -v "$ENV_HOST_IMAGE_DIR":"$ENV_CONTAINER_IMAGE_DIR" \
-     -e ENV_IMAGE_DIR="$ENV_CONTAINER_IMAGE_DIR" \
+     -v "$ENV_HOST_ATTACHMENTS_DIR":"$ENV_CONTAINER_ATTACHMENTS_DIR" \
+     -e ENV_ATTACHMENTS_DIR="$ENV_CONTAINER_ATTACHMENTS_DIR" \
      -e ENV_MONGO_QA_HUB_HOST="$ENV_MONGO_QA_HUB_HOST" \
      -e ENV_MONGO_QA_HUB_LOGIN="$ENV_MONGO_QA_HUB_LOGIN" \
      -e ENV_MONGO_QA_HUB_PASSWORD="$ENV_MONGO_QA_HUB_PASSWORD" \

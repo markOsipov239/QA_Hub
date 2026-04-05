@@ -44,11 +44,13 @@ class TestStepsService {
         val retry: Int,
         val steps: List<TestStep>
     )
+
     data class TestStep(
         var name: String,
         var id: String?,
         var parentId: String?,
         var steps: List<TestStep> = listOf(),
         var result: String,
+        var duration: Int? = null
     )
 }

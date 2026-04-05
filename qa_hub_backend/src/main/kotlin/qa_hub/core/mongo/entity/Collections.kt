@@ -8,6 +8,7 @@ enum class Collections(val collectionName: String) {
     BLOCKED_TESTS("blockedTests"),
     BLOCKED_TESTS_HISTORY("blockedTestsHistory"),
     TESTCASES("testcases"),
+    TEST_ATTACHMENTS("testAttachments"),
     TEST_LOGS("testLogs"),
     TEST_QA_REVIEWS("testQaReviews"),
     TEST_QUEUE("testQueue"),

@@ -10,12 +10,16 @@ import java.io.File
 import java.util.*
 import javax.imageio.ImageIO
 
-val imageDir = System.getenv("ENV_IMAGE_DIR") ?: "${System.getProperty("user.home")}/Images/QA_Hub"
+
+val attachmentsDir = System.getenv("ENV_ATTACHMENTS_DIR") ?: "${System.getProperty("user.home")}/QA_Hub"
+val imageDir = "${attachmentsDir}/Images"
+val textDir = "${attachmentsDir}/Text"
+
 @RestController
 @RequestMapping("/api/attachments")
 class AttachmentsController {
     @PostMapping("/images")
-    fun postAttachments(
+    fun postImageAttachments(
         @RequestParam project: String,
         @RequestParam testRunId: String,
         @RequestParam fullName: String,
@@ -43,9 +47,37 @@ class AttachmentsController {
         throw Exception("Failed to save an attachment")
     }
 
+    @PostMapping("/text")
+    fun postTextAttachments(
+        @RequestParam project: String,
+        @RequestParam testRunId: String,
+        @RequestParam fullName: String,
+        @RequestParam fileName: String,
+        @RequestParam textFile: MultipartFile,
+    ): TestResultAttachment {
+        val path = "$textDir/testruns/$project/$testRunId/$fullName"
+        val directory = File(path)
+        if (!directory.exists()) {
+            directory.mkdirs()
+        }
+        val file = File("$path/$fileName")
+
+        val result = textFile.inputStream.copyTo(file.outputStream())
+
+        if (result > 0) {
+            return TestResultAttachment(
+                type = AttachmentTypes.text,
+                path = "/api/attachments/text/${project}/${testRunId}/${fullName}/${fileName}",
+                fileName = fileName
+            )
+        }
+
+        throw Exception("Failed to save an attachment")
+    }
+
 
     @GetMapping("/images/{project}/{testRunId}/{fullName}/{fileName}", produces = [MediaType.IMAGE_JPEG_VALUE, MediaType.IMAGE_PNG_VALUE])
-    fun getAttachment(
+    fun getImageAttachment(
         @PathVariable project: String,
         @PathVariable testRunId: String,
         @PathVariable fullName: String,
@@ -59,6 +91,23 @@ class AttachmentsController {
         }
 
         val filePath = "$imageDir/testruns/$project/$testRunId/$fullName/$fileName"
+        val file = File(filePath)
+
+        return ResponseEntity.ok()
+            .contentType(mediaType)
+            .body(file.readBytes())
+    }
+
+    @GetMapping("/text/{project}/{testRunId}/{fullName}/{fileName}", produces = [MediaType.TEXT_PLAIN_VALUE])
+    fun getTextAttachment(
+        @PathVariable project: String,
+        @PathVariable testRunId: String,
+        @PathVariable fullName: String,
+        @PathVariable fileName: String,
+    ): ResponseEntity<ByteArray> {
+        val mediaType =  MediaType.TEXT_PLAIN
+
+        val filePath = "$textDir/testruns/$project/$testRunId/$fullName/$fileName"
         val file = File(filePath)
 
         return ResponseEntity.ok()

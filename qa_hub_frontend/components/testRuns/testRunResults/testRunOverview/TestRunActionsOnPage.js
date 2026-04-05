@@ -76,6 +76,7 @@ const TestRunActionsOnPage = observer (({testRun, updateTestRunInfo, ...props}) 
               height: '25px',
               backgroundColor:
                cicdType === 'GitHub' ? customTheme.palette.integrations.gitHub :
+               cicdType === 'GitLab' ? customTheme.palette.integrations.gitLab :
                cicdType === 'Teamcity' ? customTheme.palette.integrations.teamcity :
                customTheme.palette.primary.main
             }}

@@ -132,7 +132,7 @@ class TestResultsService {
 
     fun updateTestResult(testResult: TestResult): UpdateResult = runBlocking {
         val skipProperties = mutableListOf("_id", "testRunId", "fullName")
-        if (testResult.status != TestStatus.PROCESSING.status) {
+        if (testResult.status != TestStatus.PROCESSING.status && !testResult.localRetriesManagement) {
             skipProperties.add("retries")
         }
 
