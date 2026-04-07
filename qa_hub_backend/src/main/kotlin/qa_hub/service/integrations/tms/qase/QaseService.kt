@@ -28,7 +28,7 @@ class QaseService(info: TmsInfo): TmsIntegrationAbstract(info) {
         return client.postTestResult(tmsProject, testResult)
     }
 
-    override fun startTestrun(projectId: String, testRunName: String?): String {
+    override fun startTestrun(projectId: String, testRunName: String?, testIds: List<String>): String {
         return client.createTestRun(projectId, testRunName).result.id.toString()
     }
 

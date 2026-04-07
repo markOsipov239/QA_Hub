@@ -175,14 +175,14 @@ class TestRunService {
         return@runBlocking testRunCollection.find(TestRun::cicdJobId eq request.cicdJobId).toList().first()
     }
 
-    private fun startTestRunInTms(project: String, testRunName: String?): String? {
+    private fun startTestRunInTms(project: String, testRunName: String?, testIds: List<String> = listOf()): String? {
         return try {
             val prjTmsInt = projectIntegrationsService
                 .getProjectTmsInt(project)
 
             val taskTrackerService = prjTmsInt.tmsInfo?.tmsService()
 
-            taskTrackerService?.startTestrun(prjTmsInt.projectTmsInfo!!.project, testRunName)
+            taskTrackerService?.startTestrun(prjTmsInt.projectTmsInfo!!.project, testRunName, testIds)
         } catch (e: Throwable) {
             null
         }
