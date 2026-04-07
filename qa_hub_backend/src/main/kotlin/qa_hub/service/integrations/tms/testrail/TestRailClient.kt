@@ -1,5 +1,6 @@
 package qa_hub.service.integrations.tms.testrail
 
+import com.fasterxml.jackson.databind.introspect.AnnotationCollector.TwoAnnotations
 import qa_hub.entity.testRun.TestResult
 import qa_hub.entity.testRun.TestStatus
 import qa_hub.service.integrations.tms.CommonTestcase
@@ -65,7 +66,9 @@ class TestRailClient(
 
         val statusId = when (testResult.status) {
             TestStatus.SUCCESS.status -> TestRailResultStatus.PASSED.id
-            else -> TestRailResultStatus.FAILED.id
+            TestStatus.SKIPPED.status -> TestRailResultStatus.BLOCKED.id
+            TestStatus.FAILURE.status -> TestRailResultStatus.FAILED.id
+            else -> TestRailResultStatus.UNTESTED.id
         }
         val elapsed = testResult.duration?.let { d ->
             if (d <= 0) null else "${d.toInt()}s"
@@ -81,8 +84,10 @@ class TestRailClient(
 }
 
 
-
 private enum class TestRailResultStatus(val id: Int) {
     PASSED(1),
+    BLOCKED(2),
+    UNTESTED(3),
+    RETEST(4),
     FAILED(5)
 }

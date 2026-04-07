@@ -31,6 +31,11 @@ interface TestRailHttpInterface {
                         .addHeader(
                             "Authorization",  Credentials.basic(user, password, StandardCharsets.UTF_8)
                         )
+                        .url(
+                            chain.request().url.toString()
+                                .replace(baseUrl, "${baseUrl}/index.php?/")
+                                .replace("index.php?//", "index.php?/")
+                        )
                         .build()
                     chain.proceed(newRequest)
                 }.build()

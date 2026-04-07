@@ -184,7 +184,8 @@ class TestRunService {
 
             taskTrackerService?.startTestrun(prjTmsInt.projectTmsInfo!!.project, testRunName, testIds)
         } catch (e: Throwable) {
-            null
+            e.printStackTrace()
+            return null
         }
     }
 
@@ -197,7 +198,8 @@ class TestRunService {
 
             taskTrackerService?.completeTestrun(prjTmsInt.projectTmsInfo!!.project, testRunId)
         } catch (e: Throwable) {
-            null
+            e.printStackTrace()
+            return null
         }
     }
 
