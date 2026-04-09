@@ -237,12 +237,10 @@ class TestRunService {
         if (testRun.startedByRunner == runner.name) {
             testRun.tmsAutoExport = request.tmsAutoExport
 
-            if (testRun.tmsAutoExport) {
-                testRun.tmsLaunchId = if (request.tmsLaunchId == null) {
-                    startTestRunInTms(testRun.project, request.tmsLaunchName)
-                } else {
-                    request.tmsLaunchId
-                }
+            if (testRun.tmsAutoExport && request.tmsLaunchId == null) {
+                testRun.tmsLaunchId = startTestRunInTms(testRun.project, request.tmsLaunchName)
+            } else {
+                testRun.tmsLaunchId = request.tmsLaunchId
             }
 
             testRun.status = TestRunStatus.PROCESSING.status
