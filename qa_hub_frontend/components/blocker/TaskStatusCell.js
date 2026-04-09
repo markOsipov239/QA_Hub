@@ -17,14 +17,14 @@ const TaskStatusCell = observer(({blockedTest, onChangeCallback, onBlurCallback,
       setStatus(data?.data?.statusInfo?.statusName)
       setColor(data?.data?.statusInfo?.statusColor || null)
     })
-  }, [blockedTest])
+  }, [blockedTest.tmsTask])
 
 
   return <EditableTableCell
     value={blockedTest.tmsTask}
     content={<TaskLink blockedTest={blockedTest} taskUrl={taskTrackerInfo.taskUrl}/>}
     contentStyle={{
-      maxWidth: '80px',
+      maxWidth: '180px',
       minWidth: '80px',
       justifyContent: 'end'
     }}

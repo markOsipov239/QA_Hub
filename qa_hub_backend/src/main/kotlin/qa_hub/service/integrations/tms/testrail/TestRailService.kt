@@ -1,4 +1,4 @@
-package qa_hub.service.integrations.tms.qase
+package qa_hub.service.integrations.tms.testrail
 
 import qa_hub.entity.testRun.TestResult
 import qa_hub.service.integrations.tms.CommonTestcase
@@ -6,8 +6,14 @@ import qa_hub.service.integrations.tms.TmsInfo
 import qa_hub.service.integrations.tms.TmsIntegrationAbstract
 import qa_hub.service.integrations.tms.TmsProjectAbstract
 
-class QaseService(info: TmsInfo): TmsIntegrationAbstract(info) {
-    val client = QaseClient(info.apiUrl, info.apiToken!!)
+class TestRailService(info: TmsInfo) : TmsIntegrationAbstract(info) {
+
+    private val client = TestRailClient(
+        baseUrl = info.apiUrl,
+        user = info.login!!,
+        password = info.password!!
+    )
+
     override fun getProjects(): List<TmsProjectAbstract> {
         TODO("Not yet implemented")
     }
@@ -25,14 +31,14 @@ class QaseService(info: TmsInfo): TmsIntegrationAbstract(info) {
     }
 
     override fun updateTestcase(tmsProject: String, testResult: TestResult): String {
-        return client.postTestResult(tmsProject, testResult)
+        return client.postTestResult(testResult)
     }
 
     override fun startTestrun(projectId: String, testRunName: String?, testIds: List<String>): String {
-        return client.createTestRun(projectId, testRunName).result.id.toString()
+        return client.createTestRun(projectId, testRunName, testIds.map{ it.toInt() }).id.toString()
     }
 
     override fun completeTestrun(projectId: String, testRunId: String): String {
-        return client.completeTestRun(projectId, testRunId).status.toString()
+        return client.closeTestRun(testRunId).id.toString()
     }
 }

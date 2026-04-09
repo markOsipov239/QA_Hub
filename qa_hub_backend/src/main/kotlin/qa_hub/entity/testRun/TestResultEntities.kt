@@ -134,12 +134,13 @@ object AttachmentTypes {
 enum class TestStatus(val status: String) {
     SUCCESS("SUCCESS"),
     FAILURE("FAILURE"),
+    SKIPPED("SKIPPED"),
     WAITING("WAITING"),
     PROCESSING("PROCESSING");
 
     companion object {
         fun isFinal(status: String): Boolean {
-            return listOf(SUCCESS.status, FAILURE.status).contains(status)
+            return listOf(SUCCESS.status, FAILURE.status, SKIPPED.status).contains(status)
         }
 
         val finalStatuses = entries.map { it.status }.filter { isFinal(it) }

@@ -175,16 +175,17 @@ class TestRunService {
         return@runBlocking testRunCollection.find(TestRun::cicdJobId eq request.cicdJobId).toList().first()
     }
 
-    private fun startTestRunInTms(project: String, testRunName: String?): String? {
+    private fun startTestRunInTms(project: String, testRunName: String?, testIds: List<String> = listOf()): String? {
         return try {
             val prjTmsInt = projectIntegrationsService
                 .getProjectTmsInt(project)
 
             val taskTrackerService = prjTmsInt.tmsInfo?.tmsService()
 
-            taskTrackerService?.startTestrun(prjTmsInt.projectTmsInfo!!.project, testRunName)
+            taskTrackerService?.startTestrun(prjTmsInt.projectTmsInfo!!.project, testRunName, testIds)
         } catch (e: Throwable) {
-            null
+            e.printStackTrace()
+            return null
         }
     }
 
@@ -197,7 +198,8 @@ class TestRunService {
 
             taskTrackerService?.completeTestrun(prjTmsInt.projectTmsInfo!!.project, testRunId)
         } catch (e: Throwable) {
-            null
+            e.printStackTrace()
+            return null
         }
     }
 
@@ -235,12 +237,10 @@ class TestRunService {
         if (testRun.startedByRunner == runner.name) {
             testRun.tmsAutoExport = request.tmsAutoExport
 
-            if (testRun.tmsAutoExport) {
-                testRun.tmsLaunchId = if (request.tmsLaunchId == null) {
-                    startTestRunInTms(testRun.project, request.tmsLaunchName)
-                } else {
-                    request.tmsLaunchId
-                }
+            if (testRun.tmsAutoExport && request.tmsLaunchId == null) {
+                testRun.tmsLaunchId = startTestRunInTms(testRun.project, request.tmsLaunchName)
+            } else {
+                testRun.tmsLaunchId = request.tmsLaunchId
             }
 
             testRun.status = TestRunStatus.PROCESSING.status

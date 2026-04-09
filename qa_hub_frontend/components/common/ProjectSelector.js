@@ -90,6 +90,14 @@ const ProjectSelector = observer(({style}) => {
       launchUrl = launchUrl.replace("//run", "/run")
     }
 
+    if (tmsType === "Testrail") {
+      launchUrl += `/runs/view`
+      launchUrl = launchUrl.replace("//run", "/run")
+
+      testcaseUrl += `/cases/view`
+      testcaseUrl = testcaseUrl.replace("//cases", "/cases")
+    }
+
     return {
       ...tmsInt,
       testcaseUrl: testcaseUrl,

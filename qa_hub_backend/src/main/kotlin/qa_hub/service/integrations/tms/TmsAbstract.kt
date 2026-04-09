@@ -3,6 +3,7 @@ package qa_hub.service.integrations.tms
 import qa_hub.entity.testRun.TestResult
 import qa_hub.service.integrations.tms.allure.AllureService
 import qa_hub.service.integrations.tms.qase.QaseService
+import qa_hub.service.integrations.tms.testrail.TestRailService
 
 data class TmsType(
     val tmsName: String,
@@ -36,6 +37,7 @@ data class TmsInfo(
         return when (tmsType) {
             TmsTypes.ALLURE.tmsType.tmsName -> AllureService(this)
             TmsTypes.QASE.tmsType.tmsName -> QaseService(this)
+            TmsTypes.TESTRAIL.tmsType.tmsName -> TestRailService(this)
             else -> null
         }
     }
@@ -46,7 +48,7 @@ abstract class TmsIntegrationAbstract(val tmsInfo: TmsInfo) {
     abstract fun getTestcases(projectId: String): List<CommonTestcase>
     abstract fun getTestcase(projectId: String, testcaseId: String): CommonTestcase
     abstract fun updateTestcase(tmsProject: String, testResult: TestResult): String?
-    abstract fun startTestrun(projectId: String, testRunName: String?): String
+    abstract fun startTestrun(projectId: String, testRunName: String?, testIds: List<String> = listOf()): String
     abstract fun completeTestrun(projectId: String, testRunId: String): String
 }
 
