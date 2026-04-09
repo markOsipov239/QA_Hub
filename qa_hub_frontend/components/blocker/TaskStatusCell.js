@@ -24,7 +24,7 @@ const TaskStatusCell = observer(({blockedTest, onChangeCallback, onBlurCallback,
     value={blockedTest.tmsTask}
     content={<TaskLink blockedTest={blockedTest} taskUrl={taskTrackerInfo.taskUrl}/>}
     contentStyle={{
-      maxWidth: '80px',
+      maxWidth: '180px',
       minWidth: '80px',
       justifyContent: 'end'
     }}
