@@ -17,7 +17,7 @@ const TaskStatusCell = observer(({blockedTest, onChangeCallback, onBlurCallback,
       setStatus(data?.data?.statusInfo?.statusName)
       setColor(data?.data?.statusInfo?.statusColor || null)
     })
-  }, [blockedTest])
+  }, [blockedTest.tmsTask])
 
 
   return <EditableTableCell
