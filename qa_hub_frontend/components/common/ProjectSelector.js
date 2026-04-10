@@ -94,7 +94,7 @@ const ProjectSelector = observer(({style}) => {
       launchUrl += `/runs/view`
       launchUrl = launchUrl.replace("//run", "/run")
 
-      testcaseUrl += `/cases/view`
+      testcaseUrl += `/cases/view/`
       testcaseUrl = testcaseUrl.replace("//cases", "/cases")
     }
 
