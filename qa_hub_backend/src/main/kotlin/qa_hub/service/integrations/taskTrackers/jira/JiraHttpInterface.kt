@@ -19,7 +19,7 @@ interface JiraHttpInterface {
             .setLenient()
             .create()
 
-        fun getClient(baseUrl: String, username: String, apiToken: String): JiraHttpInterface {
+        fun getClient(baseUrl: String, apiToken: String): JiraHttpInterface {
             val client = OkHttpClient.Builder()
                 .addInterceptor(HttpLoggingInterceptor().apply {
                     level = HttpLoggingInterceptor.Level.HEADERS
@@ -27,7 +27,7 @@ interface JiraHttpInterface {
                 .addInterceptor { chain ->
                     val newRequest: Request = chain.request().newBuilder()
                         .addHeader(
-                            "Authorization", Credentials.basic(username, apiToken)
+                            "Authorization", "Bearer $apiToken"
                         )
                         .build()
                     chain.proceed(newRequest)
