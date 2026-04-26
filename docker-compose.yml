@@ -5,7 +5,7 @@ services:
     container_name: "qa_hub_backend"
     restart: always
     build:
-      context: .
+      context: ./qa_hub_backend
       dockerfile: ./qa_hub_backend/Dockerfile
     ports:
       - '8080:8080'
@@ -27,7 +27,7 @@ services:
     container_name: "qa_hub_frontend"
     restart: always
     build:
-      context: .
+      context: ./qa_hub_frontend
       dockerfile: ./qa_hub_frontend/Dockerfile
     ports:
       - '3000:3000'
