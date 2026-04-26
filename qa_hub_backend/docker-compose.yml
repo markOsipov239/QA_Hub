@@ -18,6 +18,8 @@ services:
         source: /QA_Hub/Attachments
         target: /QA_Hub/Attachments
         read_only: false
+        bind:
+          create_host_path: true
 
 volumes:
   qa_hub_backend:
