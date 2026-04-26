@@ -15,8 +15,8 @@ services:
     volumes:
       - qa_hub_backend:/usr/src/app/qa_hub_backend
       - type: bind
-        source: ${ENV_ATTACHMENTS_DIR_HOST}
-        target: ${ENV_ATTACHMENTS_DIR}
+        source: /QA_Hub/Attachments
+        target: /QA_Hub/Attachments
         read_only: false
 
 volumes:
