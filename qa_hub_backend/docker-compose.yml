@@ -14,6 +14,10 @@ services:
       - qa_hub_network
     volumes:
       - qa_hub_backend:/usr/src/app/qa_hub_backend
+      - type: bind
+        source: /QA_Hub/Attachments
+        target: /QA_Hub/Attachments
+        read_only: false
 
 volumes:
   qa_hub_backend:
