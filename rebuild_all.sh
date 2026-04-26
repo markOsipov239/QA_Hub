@@ -9,4 +9,4 @@ docker rmi qa_hub_backend --force
 docker stop qa_hub_frontend
 docker rmi qa_hub_frontend --force
 
-docker compose up -d
+docker compose up -d --build
