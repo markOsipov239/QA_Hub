@@ -6,7 +6,7 @@ services:
     restart: always
     build:
       context: .
-      dockerfile: ./qa_hub_backend/Dockefile
+      dockerfile: ./qa_hub_backend/Dockerfile
     ports:
       - '8080:8080'
     env_file:
@@ -28,7 +28,7 @@ services:
     restart: always
     build:
       context: .
-      dockerfile: ./qa_hub_frontend/Dockefile
+      dockerfile: ./qa_hub_frontend/Dockerfile
     ports:
       - '3000:3000'
     env_file:
