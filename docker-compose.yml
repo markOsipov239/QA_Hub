@@ -40,6 +40,7 @@ services:
 
 volumes:
   qa_hub_backend:
+  qa_hub_frontend:
 
 networks:
   qa_hub_network:
