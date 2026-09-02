@@ -1,14 +1,14 @@
-import {getDateTime, secondsBetween} from "../../../../../utils/DateTimeUtils";
+import {getDateTime, roundSeconds, secondsBetween} from "../../../../../utils/DateTimeUtils";
 import StyledTooltip from "../../../../primitives/StyledTooltip";
 import {customTheme} from "../../../../../styles/CustomTheme";
 
 const TimelineElement = ({ startDate, endDate, duration, result, hoveredTest, setHoveredTest, ...props }) => {
   const calculateDuration = () => {
     if (result.duration) {
-        return Number.parseInt(result.duration)
+        return roundSeconds(result.duration)
     }
     if (result.qaHubDuration) {
-        return Number.parseInt(result.qaHubDuration)
+        return roundSeconds(result.qaHubDuration)
     }
     return secondsBetween(result.startDate, result.endDate)
   }
@@ -35,7 +35,7 @@ const TimelineElement = ({ startDate, endDate, duration, result, hoveredTest, se
           <label style={{marginLeft: '15px', color: 'rgba(255, 255, 255, 0.5)'}}>{getDateTime(result.endDate)}</label>
         </div>
 
-        <label style={{marginTop: '5px'}}>Duration: {resultDuration}s</label>
+        <label style={{marginTop: '5px'}}>Duration: {resultDuration.toFixed(2)}s</label>
       </div>
 
       <label style={{marginTop: '10px'}}>Retry: {result.retry}</label>

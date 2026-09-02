@@ -1,4 +1,4 @@
-import {getDateTime, secondsBetween} from "../../../../../utils/DateTimeUtils";
+import {getDateTime, roundSeconds, secondsBetween} from "../../../../../utils/DateTimeUtils";
 import StyledTooltip from "../../../../primitives/StyledTooltip";
 import {customTheme} from "../../../../../styles/CustomTheme";
 
@@ -7,10 +7,10 @@ const DurationChartElement = ({durationElement, hoveredTest, setHoveredTest, max
 
   const calculateDuration = () => {
     if (durationElement.duration) {
-        return Number.parseInt(durationElement.duration)
+        return roundSeconds(durationElement.duration)
     }
     if (durationElement.qaHubDuration) {
-        return Number.parseInt(durationElement.qaHubDuration)
+        return roundSeconds(durationElement.qaHubDuration)
     }
     return secondsBetween(durationElement.startDate, durationElement.endDate)
   }
@@ -45,7 +45,7 @@ const DurationChartElement = ({durationElement, hoveredTest, setHoveredTest, max
           <label style={{marginLeft: '10px', color: 'rgba(255, 255, 255, 0.5)'}}>{getDateTime(durationElement.endDate)}</label>
         </div>
 
-        <label style={{marginTop: '10px'}}>Duration: {Number.parseInt(resultDuration)}s</label>
+        <label style={{marginTop: '10px'}}>Duration: {resultDuration.toFixed(2)}s</label>
       </div>
 
       <label style={{marginTop: '10px'}}>Retry: {durationElement.retry}</label>
@@ -63,7 +63,7 @@ const DurationChartElement = ({durationElement, hoveredTest, setHoveredTest, max
     <div
       style={{
         width: '10px',
-        height: (Number.parseInt(resultDuration) / maxDuration * 100 ) + '%',
+        height: (resultDuration / maxDuration * 100 ) + '%',
         backgroundColor: durationElement.status === 'SUCCESS' ? customTheme.palette.success.main : customTheme.palette.error.main,
         cursor: 'pointer',
         ...props.style
