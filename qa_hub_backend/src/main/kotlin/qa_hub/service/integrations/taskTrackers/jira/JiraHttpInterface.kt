@@ -7,10 +7,14 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.logging.HttpLoggingInterceptor
 import qa_hub.service.integrations.taskTrackers.jira.entity.JiraIssue
+import qa_hub.service.integrations.taskTrackers.jira.entity.JiraSearchRequest
+import qa_hub.service.integrations.taskTrackers.jira.entity.JiraSearchResponse
 import retrofit2.Call
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.POST
 import retrofit2.http.Path
 
 interface JiraHttpInterface {
@@ -47,4 +51,9 @@ interface JiraHttpInterface {
     fun getIssue(
         @Path("issue") issue: String
     ): Call<JiraIssue>
+
+    @POST("/rest/api/latest/search")
+    fun searchIssues(
+        @Body body: JiraSearchRequest
+    ): Call<JiraSearchResponse>
 }

@@ -1,23 +1,19 @@
 import EditableTableCell from "../primitives/Table/EditableTableCell";
-import {useEffect, useState} from "react";
-import {getTaskStatus} from "../../requests/BlockerRequests";
 import {observer} from "mobx-react-lite";
 import projectIntegrationsState from "../../state/integrations/ProjectIntegrationsState";
+import blockerState from "../../state/BlockerState";
 import TaskLink from "./TaskLink";
 import TaskStatus from "./TaskStatus";
 
 
 const TaskStatusCell = observer(({blockedTest, onChangeCallback, onBlurCallback, ...props}) => {
-  const [status, setStatus] = useState(null)
-  const [color, setColor] = useState(null)
   const taskTrackerInfo = projectIntegrationsState.taskTrackerInt || {}
+  const statusInfo = blockerState.taskStatuses[blockedTest.tmsTask] || {}
 
-  useEffect(() => {
-    getTaskStatus(blockedTest.project, blockedTest.tmsTask).then((data) => {
-      setStatus(data?.data?.statusInfo?.statusName)
-      setColor(data?.data?.statusInfo?.statusColor || null)
-    })
-  }, [blockedTest.tmsTask])
+  const handleBlur = () => {
+    blockerState.ensureTaskStatus(blockedTest.project, blockedTest.tmsTask)
+    onBlurCallback?.()
+  }
 
 
   return <EditableTableCell
@@ -34,7 +30,7 @@ const TaskStatusCell = observer(({blockedTest, onChangeCallback, onBlurCallback,
         </div>
         <div />
         <div style={{display: 'flex', justifyContent: 'flex-start', minWidth: 0}}>
-          <TaskStatus status={status} color={color} style={{marginLeft: 0}}/>
+          <TaskStatus status={statusInfo.statusName} color={statusInfo.statusColor} style={{marginLeft: 0}}/>
         </div>
       </div>
     }
@@ -43,7 +39,7 @@ const TaskStatusCell = observer(({blockedTest, onChangeCallback, onBlurCallback,
       maxWidth: '100%'
     }}
     onChangeCallback={ onChangeCallback }
-    onBlurCallback={ onBlurCallback }
+    onBlurCallback={ handleBlur }
     {...props}
   />
 })

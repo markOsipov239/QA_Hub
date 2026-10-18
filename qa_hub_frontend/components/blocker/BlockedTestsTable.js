@@ -52,7 +52,12 @@ const BlockedTestsTable = observer(() => {
     }
 
     useEffect(() => {
-        blockerState.updateBlockedTests(project)
+        if (!project) {
+            return
+        }
+        blockerState.updateBlockedTests(project, () => {
+            blockerState.loadTaskStatuses(project)
+        })
     }, [project])
 
 
