@@ -1,4 +1,4 @@
-import {getDateTime, roundSeconds, secondsBetween} from "../../../../../utils/DateTimeUtils";
+import {effectiveResultStart, getDateTime, roundSeconds, secondsBetween} from "../../../../../utils/DateTimeUtils";
 import StyledTooltip from "../../../../primitives/StyledTooltip";
 import {customTheme} from "../../../../../styles/CustomTheme";
 
@@ -13,11 +13,12 @@ const TimelineElement = ({ startDate, endDate, duration, result, hoveredTest, se
     return secondsBetween(result.startDate, result.endDate)
   }
   const resultDuration = calculateDuration()
-  const secondsBeforeEnd = secondsBetween(startDate, result.endDate)
-  const secondsFromStart = (secondsBeforeEnd - resultDuration)
+  const resultStart = effectiveResultStart(result)
+  const secondsFromStart = Math.max(0, secondsBetween(startDate, resultStart))
+  const secondsBeforeEnd = secondsFromStart + resultDuration
 
-  const relativeStart = (secondsBeforeEnd - resultDuration) / duration * 100
-  const relativeWidth = resultDuration / duration * 100
+  const relativeStart = duration > 0 ? secondsFromStart / duration * 100 : 0
+  const relativeWidth = duration > 0 ? resultDuration / duration * 100 : 0
 
   const TimelineElementTooltip = () => {
     return <div style={{display: 'grid'}}>
@@ -26,7 +27,7 @@ const TimelineElement = ({ startDate, endDate, duration, result, hoveredTest, se
       <div style={{display: 'grid', marginTop: '10px'}}>
         <div style={{display: 'flex'}}>
           <label>Started: {secondsFromStart}s</label>
-          <label style={{marginLeft: '15px', color: 'rgba(255, 255, 255, 0.5)'}}>{getDateTime(result.startDate)}</label>
+          <label style={{marginLeft: '15px', color: 'rgba(255, 255, 255, 0.5)'}}>{getDateTime(resultStart)}</label>
 
         </div>
 
