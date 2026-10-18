@@ -24,3 +24,6 @@ out/
 /qa_hub_backend/src/main/resources/debug/
 
 /deploy_*.sh
+/qa_hub_frontend/public/build-info.json
+/qa_hub_backend/src/main/resources/build-info.json
+/deploy.ps1

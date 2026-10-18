@@ -37,4 +37,19 @@ class UtilsController {
             throw Exception("Logs file is not found on path: $logFilePath")
         }
     }
+
+    data class BuildInfo(
+        val branch: String,
+        val commit: String,
+        val dirty: Boolean,
+        val buildTime: String
+    )
+
+    @GetMapping("/version")
+    fun getVersion(): BuildInfo {
+        val stream = javaClass.classLoader.getResourceAsStream("build-info.json")
+            ?: return BuildInfo("unknown", "unknown", false, "unknown")
+
+        return stream.bufferedReader().use { Gson().fromJson(it, BuildInfo::class.java) }
+    }
 }
