@@ -23,10 +23,12 @@ class AttachmentsController {
         @RequestParam project: String,
         @RequestParam testRunId: String,
         @RequestParam fullName: String,
+        @RequestParam(required = false, defaultValue = "0") retry: Int,
         @RequestParam image: MultipartFile,
         @RequestParam(required = false, defaultValue = "jpeg") extension: String
     ): TestResultAttachment {
-        val path = "$imageDir/testruns/$project/$testRunId/$fullName"
+        val retryDir = "Retry_$retry"
+        val path = "$imageDir/testruns/$project/$testRunId/$fullName/$retryDir"
         val directory = File(path)
         if (!directory.exists()) {
             directory.mkdirs()
@@ -39,7 +41,7 @@ class AttachmentsController {
         if (result) {
             return TestResultAttachment(
                 type = AttachmentTypes.image,
-                path = "/api/attachments/images/${project}/${testRunId}/${fullName}/${fileName}",
+                path = "/api/attachments/images/${project}/${testRunId}/${fullName}/${retryDir}/${fileName}",
                 fileName = fileName
             )
         }
@@ -52,10 +54,12 @@ class AttachmentsController {
         @RequestParam project: String,
         @RequestParam testRunId: String,
         @RequestParam fullName: String,
+        @RequestParam(required = false, defaultValue = "0") retry: Int,
         @RequestParam fileName: String,
         @RequestParam textFile: MultipartFile,
     ): TestResultAttachment {
-        val path = "$textDir/testruns/$project/$testRunId/$fullName"
+        val retryDir = "Retry_$retry"
+        val path = "$textDir/testruns/$project/$testRunId/$fullName/$retryDir"
         val directory = File(path)
         if (!directory.exists()) {
             directory.mkdirs()
@@ -67,7 +71,7 @@ class AttachmentsController {
         if (result > 0) {
             return TestResultAttachment(
                 type = AttachmentTypes.text,
-                path = "/api/attachments/text/${project}/${testRunId}/${fullName}/${fileName}",
+                path = "/api/attachments/text/${project}/${testRunId}/${fullName}/${retryDir}/${fileName}",
                 fileName = fileName
             )
         }
@@ -75,6 +79,22 @@ class AttachmentsController {
         throw Exception("Failed to save an attachment")
     }
 
+    @GetMapping(
+        "/images/{project}/{testRunId}/{fullName}/{retryDir}/{fileName}",
+        produces = [MediaType.IMAGE_JPEG_VALUE, MediaType.IMAGE_PNG_VALUE]
+    )
+    fun getImageAttachmentWithRetry(
+        @PathVariable project: String,
+        @PathVariable testRunId: String,
+        @PathVariable fullName: String,
+        @PathVariable retryDir: String,
+        @PathVariable fileName: String,
+    ): ResponseEntity<ByteArray> {
+        return readImageAttachment(
+            "$imageDir/testruns/$project/$testRunId/$fullName/$retryDir/$fileName",
+            fileName
+        )
+    }
 
     @GetMapping("/images/{project}/{testRunId}/{fullName}/{fileName}", produces = [MediaType.IMAGE_JPEG_VALUE, MediaType.IMAGE_PNG_VALUE])
     fun getImageAttachment(
@@ -83,19 +103,21 @@ class AttachmentsController {
         @PathVariable fullName: String,
         @PathVariable fileName: String,
     ): ResponseEntity<ByteArray> {
-        val extension = fileName.substringAfterLast(".").lowercase()
-        val mediaType = if (extension == "png") {
-            MediaType.IMAGE_PNG
-        } else {
-            MediaType.IMAGE_JPEG
-        }
+        return readImageAttachment("$imageDir/testruns/$project/$testRunId/$fullName/$fileName", fileName)
+    }
 
-        val filePath = "$imageDir/testruns/$project/$testRunId/$fullName/$fileName"
-        val file = File(filePath)
-
-        return ResponseEntity.ok()
-            .contentType(mediaType)
-            .body(file.readBytes())
+    @GetMapping(
+        "/text/{project}/{testRunId}/{fullName}/{retryDir}/{fileName}",
+        produces = [MediaType.TEXT_PLAIN_VALUE]
+    )
+    fun getTextAttachmentWithRetry(
+        @PathVariable project: String,
+        @PathVariable testRunId: String,
+        @PathVariable fullName: String,
+        @PathVariable retryDir: String,
+        @PathVariable fileName: String,
+    ): ResponseEntity<ByteArray> {
+        return readTextAttachment("$textDir/testruns/$project/$testRunId/$fullName/$retryDir/$fileName")
     }
 
     @GetMapping("/text/{project}/{testRunId}/{fullName}/{fileName}", produces = [MediaType.TEXT_PLAIN_VALUE])
@@ -105,13 +127,29 @@ class AttachmentsController {
         @PathVariable fullName: String,
         @PathVariable fileName: String,
     ): ResponseEntity<ByteArray> {
-        val mediaType =  MediaType.TEXT_PLAIN
+        return readTextAttachment("$textDir/testruns/$project/$testRunId/$fullName/$fileName")
+    }
 
-        val filePath = "$textDir/testruns/$project/$testRunId/$fullName/$fileName"
+    private fun readImageAttachment(filePath: String, fileName: String): ResponseEntity<ByteArray> {
+        val extension = fileName.substringAfterLast(".").lowercase()
+        val mediaType = if (extension == "png") {
+            MediaType.IMAGE_PNG
+        } else {
+            MediaType.IMAGE_JPEG
+        }
+
         val file = File(filePath)
 
         return ResponseEntity.ok()
             .contentType(mediaType)
+            .body(file.readBytes())
+    }
+
+    private fun readTextAttachment(filePath: String): ResponseEntity<ByteArray> {
+        val file = File(filePath)
+
+        return ResponseEntity.ok()
+            .contentType(MediaType.TEXT_PLAIN)
             .body(file.readBytes())
     }
 }
