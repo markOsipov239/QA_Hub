@@ -33,9 +33,9 @@ open class ApplicationConfig: WebMvcConfigurer {
             .maxAge(3600)
     }
 
-    override fun configureMessageConverters(converters: MutableList<HttpMessageConverter<*>?>) {
-        converters.add(getJacksonConverter())
-        converters.add(ByteArrayHttpMessageConverter())
+    override fun extendMessageConverters(converters: MutableList<HttpMessageConverter<*>?>) {
+        converters.add(0, getJacksonConverter())
+        converters.add(1, ByteArrayHttpMessageConverter())
     }
 
     //Converting mongo object id as string
