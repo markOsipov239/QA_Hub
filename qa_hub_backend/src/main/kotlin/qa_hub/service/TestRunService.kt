@@ -5,6 +5,8 @@ import com.slack.api.model.block.LayoutBlock
 import com.slack.api.model.block.SectionBlock
 import com.slack.api.model.block.composition.MarkdownTextObject
 import kotlinx.coroutines.*
+import com.mongodb.client.model.FindOneAndUpdateOptions
+import com.mongodb.client.model.ReturnDocument
 import org.litote.kmongo.*
 import org.litote.kmongo.coroutine.aggregate
 import org.slf4j.Logger
@@ -29,7 +31,6 @@ import qa_hub.service.utils.ProjectIntegrationsService
 import java.io.File
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
-import kotlin.random.Random
 
 
 @Service
@@ -55,10 +56,6 @@ class TestRunService {
 
     private val testRetriesCollection by lazy {
         mongoClient.db.getCollection<TestResultRetry>(TEST_RESULTS_RETRIES.collectionName)
-    }
-
-    private val testQueueCollection by lazy {
-        mongoClient.db.getCollection<TestQueue>(TEST_QUEUE.collectionName)
     }
 
     private val testLogsCollection by lazy {
@@ -260,12 +257,6 @@ class TestRunService {
                 )
             )
 
-            testQueueCollection.updateOne(
-                TestQueue::testRunId eq testRun.testRunId,
-                TestQueue(testRunId = testRun.testRunId),
-                upsert()
-            )
-
             val updateTestResultRequests = request.testList.map {
                 TestResult(
                     testRunId = testRun.testRunId,
@@ -306,44 +297,6 @@ class TestRunService {
         testRunCollection.findOne(TestRun::testRunId eq testRunId)
     }
 
-    private fun enlistInQueue(testRunId: String, queueTicket: String): String = runBlocking {
-        testQueueCollection.updateOne(
-            TestQueue::testRunId eq testRunId,
-            push(TestQueue::queue, queueTicket),
-            upsert()
-        )
-
-        return@runBlocking queueTicket
-    }
-
-    private fun waitForYourTurn(testRunId: String, queueTicket: String) = runBlocking {
-        val maxWaitTime = 10000L
-        val timeout = 200L
-        val deadline = currentEpoch() + maxWaitTime
-
-//        withContext(Dispatchers.Default) {
-//            async {
-//                while (
-//                    currentEpoch() < deadline && testQueueCollection.findOne(TestQueue::testRunId eq testRunId)?.queue?.firstOrNull() != queueTicket
-//                ) {
-//                    delay(timeout)
-//                }
-//            }.await()
-//        }
-
-        while (
-            currentEpoch() < deadline && testQueueCollection.findOne(TestQueue::testRunId eq testRunId)?.queue?.firstOrNull() != queueTicket
-        ) {
-            delay(timeout)
-        }
-    }
-    private suspend fun leaveQueue(testRunId: String, queueTicket: String) {
-        testQueueCollection.updateOne(
-            TestQueue::testRunId eq testRunId,
-            pull(TestQueue::queue, queueTicket)
-        )
-    }
-
     fun getNextTest(testRunId: String, simulatorId: String = "", runner: String): NextTestResponse = runBlocking {
         val testRun = getTestRun(testRunId)!!
 
@@ -351,41 +304,33 @@ class TestRunService {
             testResultsService.forceStopForDevice(testRunId, simulatorId, runner)
         }
 
-        var queueTicket = "${runner}_$simulatorId"
-        if (simulatorId.isEmpty()) {
-            queueTicket = "${currentEpoch()}_${Random.nextInt(1000000, 9999999)}"
-        }
-        enlistInQueue(testRunId, queueTicket)
-        waitForYourTurn(testRunId, queueTicket)
-
-        val nextTest = testResultsCollection.aggregate<TestResult>(
-            match(
-                and(
-                    TestResult::testRunId eq testRunId,
-                    or(
-                        TestResult::status eq TestStatus.WAITING.status,
-                        and(
-                            TestResult::status eq TestStatus.FAILURE.status,
-                            TestResult::retries lt (testRun.config?.retries ?: 1)
-                        )
+        val nextTest = testResultsCollection.findOneAndUpdate(
+            and(
+                TestResult::testRunId eq testRunId,
+                or(
+                    TestResult::status eq TestStatus.WAITING.status,
+                    and(
+                        TestResult::status eq TestStatus.FAILURE.status,
+                        TestResult::retries lt (testRun.config?.retries ?: 1)
                     )
                 )
             ),
-            sort(descending(TestResult::status)),
-            limit(1)
-        ).toList().firstOrNull()
+            combine(
+                set(
+                    TestResult::status setTo TestStatus.PROCESSING.status,
+                    TestResult::startDate setTo currentDateTimeUtc(),
+                    TestResult::deviceId setTo simulatorId,
+                    TestResult::runner setTo runner
+                ),
+                inc(TestResult::retries, 1)
+            ),
+            FindOneAndUpdateOptions()
+                .sort(descending(TestResult::status))
+                .returnDocument(ReturnDocument.AFTER)
+        )
 
         if (nextTest != null) {
-            nextTest.apply {
-                status = TestStatus.PROCESSING.status
-                startDate = currentDateTimeUtc()
-                deviceId = simulatorId
-                this.runner = runner
-                retries +=  1
-            }
-
             testResultsService.updateTestResult(nextTest)
-            leaveQueue(testRunId, queueTicket)
 
             return@runBlocking NextTestResponse(
                 nextTest = nextTest.fullName,
@@ -393,16 +338,14 @@ class TestRunService {
                 retry = nextTest.retries,
                 title = nextTest.title
             )
-        } else {
-            leaveQueue(testRunId, queueTicket)
-
-            return@runBlocking NextTestResponse(
-                nextTest = null,
-                testId = null,
-                retry = null,
-                title = null
-            )
         }
+
+        return@runBlocking NextTestResponse(
+            nextTest = null,
+            testId = null,
+            retry = null,
+            title = null
+        )
     }
 
     fun cancelRun(testRunId: String) {
@@ -561,10 +504,6 @@ class TestRunService {
             )
         }
 
-        testQueueCollection.deleteMany(
-            TestQueue::testRunId eq testRunId
-        )
-
         return@runBlocking testRun
     }
 
@@ -582,7 +521,6 @@ class TestRunService {
         testRunCollection.deleteMany(TestRun::testRunId eq testRunId)
         testResultsCollection.deleteMany(TestResult::testRunId eq testRunId)
         testRetriesCollection.deleteMany(TestResultRetry::testRunId eq testRunId)
-        testQueueCollection.deleteMany(TestQueue::testRunId eq testRunId)
         testLogsCollection.deleteMany(TestLogsService.TestLog::testRunId eq testRunId)
         appLogsCollection.deleteMany(TestLogsService.TestLog::testRunId eq testRunId)
         testStepsCollection.deleteMany(TestStepsService.TestSteps::testRunId eq testRunId)

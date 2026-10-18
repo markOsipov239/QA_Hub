@@ -100,11 +100,6 @@ data class TestListElement(
     val fullName: String
 )
 
-data class TestQueue(
-    val testRunId: String,
-    val queue: MutableList<String> = mutableListOf()
-)
-
 data class NextTestResponse(
     var nextTest: String?,
     val testId: String?,
