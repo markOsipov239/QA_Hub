@@ -78,6 +78,29 @@ class TestRunController {
         return testRunService.getNextTest(testRunId, simulatorId, runner)
     }
 
+    @GetMapping("/nextTests/{testRunId}")
+    fun getNextTestV2(
+        @PathVariable testRunId: String,
+        @RequestParam("maxTests", required = false, defaultValue = "0") maxTests: Int,
+        @RequestParam("simulatorId", required = false, defaultValue = "") simulatorId: String,
+        @RequestParam("runner", required = false, defaultValue = "") runner: String
+    ): NextTestsResponse {
+        return testRunService.getNextTestV2(testRunId, simulatorId, runner, maxTests)
+    }
+
+    @PostMapping("/nextTests/{testRunId}")
+    fun getNextTestV2Post(
+        @PathVariable testRunId: String,
+        @RequestBody request: NextTestsRequest
+    ): NextTestsResponse {
+        return testRunService.getNextTestV2(
+            testRunId,
+            request.simulatorId,
+            request.runner,
+            request.maxTests
+        )
+    }
+
     @PostMapping("/cancel/{testRunId}")
     fun cancelRun(@PathVariable testRunId: String) {
         testRunService.cancelRun(testRunId)

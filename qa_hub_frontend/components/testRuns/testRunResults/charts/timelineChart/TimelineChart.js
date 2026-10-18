@@ -5,7 +5,7 @@ import ComputerIcon from "@mui/icons-material/Computer";
 import PhoneIphoneIcon from "@mui/icons-material/PhoneIphone";
 import {Paper} from "@mui/material";
 import {useEffect, useRef, useState} from "react";
-import {secondsBetween} from "../../../../../utils/DateTimeUtils";
+import {earliestTimelineStart, secondsBetween} from "../../../../../utils/DateTimeUtils";
 import {useRouter} from "next/router";
 import TimelineElement from "./TimelineElement";
 import {getTimelineData} from "../../../../../requests/testResults/TestResultsRequests";
@@ -29,10 +29,6 @@ const TimelineChart = observer(({...props}) => {
   const [pointerCoordX, setPointerCoordX] = useState(0)
   const [pointerTitle, setPointerTitle] = useState({ })
 
-  const startDate = timelineData.startDate
-  const endDate = timelineData.endDate
-  const duration = secondsBetween(startDate, endDate)
-
   useEffect(() => {
     const testRunId = router.query.testRunId
     if (testRunId) {
@@ -48,6 +44,10 @@ const TimelineChart = observer(({...props}) => {
   if (!timelineData.runners) {
     return <>Loading</>
   }
+
+  const startDate = earliestTimelineStart(timelineData) || timelineData.startDate
+  const endDate = timelineData.endDate
+  const duration = secondsBetween(startDate, endDate)
 
   return <div style={{display: 'grid'}}>
     <Paper

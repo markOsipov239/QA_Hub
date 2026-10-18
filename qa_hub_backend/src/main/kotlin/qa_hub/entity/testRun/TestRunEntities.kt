@@ -106,3 +106,13 @@ data class NextTestResponse(
     val title: String?,
     val retry: Int?
 )
+
+data class NextTestsRequest(
+    val maxTests: Int = 0,
+    val simulatorId: String = "",
+    val runner: String = ""
+)
+
+data class NextTestsResponse(
+    val tests: List<NextTestResponse>
+)

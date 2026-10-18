@@ -13,6 +13,7 @@ import qa_hub.core.mongo.utils.setCurrentPropertyValues
 import qa_hub.core.utils.DateTimeUtils
 import qa_hub.entity.testRun.*
 import qa_hub.service.utils.ProjectIntegrationsService
+import java.time.Instant
 
 @Service
 class TestResultsService {
@@ -137,6 +138,9 @@ class TestResultsService {
         }
 
         testResult.endDate = DateTimeUtils.currentDateTimeUtc()
+        if (testResult.startDate.isNullOrBlank()) {
+            testResult.startDate = inferredStartDate(testResult.endDate, testResult.duration)
+        }
         testResult.qaHubDuration = testResult.calcQaHubDuration()
 
         launch {
@@ -330,6 +334,67 @@ class TestResultsService {
         )
 
 
-        return@runBlocking testResultsRetriesCollection.aggregate<TimelineData>(*pipeline.toTypedArray()).first()
+        val timeline = testResultsRetriesCollection.aggregate<TimelineData>(*pipeline.toTypedArray()).first()
+        return@runBlocking timeline?.let { normalizeTimelineBounds(it) }
+    }
+
+    private fun normalizeTimelineBounds(timeline: TimelineData): TimelineData {
+        val runners = timeline.runners.map { runner ->
+            val devices = runner.devices.map { device ->
+                val results = device.results.map { normalizeTimelineElement(it) }
+                device.copy(
+                    results = results,
+                    startDate = minIsoDate(results.map { it.startDate } + device.startDate),
+                    endDate = maxIsoDate(results.map { it.endDate } + device.endDate)
+                )
+            }
+            runner.copy(
+                devices = devices,
+                startDate = minIsoDate(devices.map { it.startDate } + runner.startDate),
+                endDate = maxIsoDate(devices.map { it.endDate } + runner.endDate)
+            )
+        }
+
+        return timeline.copy(
+            runners = runners,
+            startDate = minIsoDate(runners.map { it.startDate } + timeline.startDate),
+            endDate = maxIsoDate(runners.map { it.endDate } + timeline.endDate)
+        )
+    }
+
+    private fun normalizeTimelineElement(element: TimelineElement): TimelineElement {
+        val inferredStart = inferredStartDate(element.endDate, element.duration, element.startDate) ?: element.startDate
+        return if (inferredStart != element.startDate) {
+            element.copy(startDate = inferredStart)
+        } else {
+            element
+        }
+    }
+
+    private fun inferredStartDate(endDate: String?, durationSec: Double?, fallbackStart: String? = null): String? {
+        if (endDate.isNullOrBlank() || durationSec == null || durationSec <= 0) {
+            return fallbackStart ?: endDate
+        }
+
+        return try {
+            val end = Instant.parse(endDate)
+            val fallback = fallbackStart?.let { Instant.parse(it) }
+            val spanSec = fallback?.let { java.time.Duration.between(it, end).toMillis() / 1000.0 } ?: 0.0
+            if (fallback != null && durationSec <= spanSec + 0.05) {
+                fallbackStart
+            } else {
+                end.minusMillis((durationSec * 1000).toLong()).toString()
+            }
+        } catch (_: Exception) {
+            fallbackStart ?: endDate
+        }
+    }
+
+    private fun minIsoDate(dates: List<String?>): String {
+        return dates.filterNotNull().filter { it.isNotBlank() }.minByOrNull { Instant.parse(it) } ?: ""
+    }
+
+    private fun maxIsoDate(dates: List<String?>): String {
+        return dates.filterNotNull().filter { it.isNotBlank() }.maxByOrNull { Instant.parse(it) } ?: ""
     }
 }
