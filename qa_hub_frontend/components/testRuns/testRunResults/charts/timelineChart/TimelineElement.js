@@ -50,10 +50,10 @@ const TimelineElement = ({ startDate, endDate, duration, result, hoveredTest, se
     <div
       style={{
         position: 'absolute',
-        left: relativeStart + '%',
+        left: `calc(${relativeStart}% + 1px)`,
         backgroundColor: result.status === 'SUCCESS' ? customTheme.palette.success.main : customTheme.palette.error.main,
         height: '100%',
-        width: relativeWidth + '%',
+        width: `max(2px, calc(${relativeWidth}% - 2px))`,
         ...props.style
       }}
       onMouseOver={() => setHoveredTest(result.fullName)}

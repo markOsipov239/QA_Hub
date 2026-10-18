@@ -307,8 +307,13 @@ class TestRunService {
         testRunCollection.findOne(TestRun::testRunId eq testRunId)
     }
 
-    fun getNextTest(testRunId: String, simulatorId: String = "", runner: String): NextTestResponse = runBlocking {
-        val testRun = prepareNextTestClaim(testRunId, simulatorId, runner)
+    fun getNextTest(
+        testRunId: String,
+        simulatorId: String = "",
+        runner: String,
+        noForceFail: Boolean = false
+    ): NextTestResponse = runBlocking {
+        val testRun = prepareNextTestClaim(testRunId, simulatorId, runner, noForceFail)
         val nextTest = claimNextTest(
             testRunId = testRunId,
             retries = testRun.config?.retries ?: 1,
@@ -324,9 +329,10 @@ class TestRunService {
         testRunId: String,
         simulatorId: String = "",
         runner: String = "",
-        maxTests: Int = 0
+        maxTests: Int = 0,
+        noForceFail: Boolean = false
     ): NextTestsResponse = runBlocking {
-        val testRun = prepareNextTestClaim(testRunId, simulatorId, runner)
+        val testRun = prepareNextTestClaim(testRunId, simulatorId, runner, noForceFail)
         val retries = testRun.config?.retries ?: 1
         val queued = testResultsCollection.find(claimableTestFilter(testRunId, retries)).toList()
         if (queued.isEmpty()) {
@@ -369,10 +375,19 @@ class TestRunService {
         return@runBlocking NextTestsResponse(tests = claimed.map { it.toNextTestResponse() })
     }
 
-    private fun prepareNextTestClaim(testRunId: String, simulatorId: String, runner: String): TestRun {
+    private fun prepareNextTestClaim(
+        testRunId: String,
+        simulatorId: String,
+        runner: String,
+        noForceFail: Boolean = false
+    ): TestRun {
         val testRun = getTestRun(testRunId)!!
         if (simulatorId != "") {
-            testResultsService.forceStopForDevice(testRunId, simulatorId, runner)
+            if (noForceFail) {
+                testResultsService.releaseDevice(testRunId, simulatorId)
+            } else {
+                testResultsService.forceStopForDevice(testRunId, simulatorId, runner)
+            }
         }
         return testRun
     }
