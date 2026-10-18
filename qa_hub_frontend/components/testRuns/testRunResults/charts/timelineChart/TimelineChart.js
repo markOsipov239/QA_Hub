@@ -29,10 +29,6 @@ const TimelineChart = observer(({...props}) => {
   const [pointerCoordX, setPointerCoordX] = useState(0)
   const [pointerTitle, setPointerTitle] = useState({ })
 
-  const startDate = earliestTimelineStart(timelineData)
-  const endDate = timelineData.endDate
-  const duration = secondsBetween(startDate, endDate)
-
   useEffect(() => {
     const testRunId = router.query.testRunId
     if (testRunId) {
@@ -48,6 +44,10 @@ const TimelineChart = observer(({...props}) => {
   if (!timelineData.runners) {
     return <>Loading</>
   }
+
+  const startDate = earliestTimelineStart(timelineData) || timelineData.startDate
+  const endDate = timelineData.endDate
+  const duration = secondsBetween(startDate, endDate)
 
   return <div style={{display: 'grid'}}>
     <Paper

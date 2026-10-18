@@ -46,6 +46,10 @@ export function secondsBetween(date1, date2) {
 }
 
 export function effectiveResultStart(result) {
+    if (!result?.endDate || !result?.startDate) {
+        return result?.startDate || result?.endDate || null
+    }
+
     const end = new Date(result.endDate).getTime()
     const start = new Date(result.startDate).getTime()
     if (Number.isNaN(end) || Number.isNaN(start)) {
@@ -62,7 +66,15 @@ export function effectiveResultStart(result) {
 }
 
 export function earliestTimelineStart(timelineData) {
+    if (!timelineData?.startDate && !(timelineData?.runners || []).length) {
+        return null
+    }
+
     let min = new Date(timelineData.startDate).getTime()
+    if (Number.isNaN(min)) {
+        min = Number.POSITIVE_INFINITY
+    }
+
     ;(timelineData.runners || []).forEach((runner) => {
         (runner.devices || []).forEach((device) => {
             (device.results || []).forEach((result) => {
@@ -73,6 +85,10 @@ export function earliestTimelineStart(timelineData) {
             })
         })
     })
+
+    if (!Number.isFinite(min)) {
+        return timelineData.startDate || null
+    }
 
     return new Date(min).toISOString()
 }
