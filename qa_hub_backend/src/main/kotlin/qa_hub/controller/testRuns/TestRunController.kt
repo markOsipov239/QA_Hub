@@ -72,10 +72,11 @@ class TestRunController {
     @GetMapping("/nextTest/{testRunId}")
     fun getNextTest(@PathVariable testRunId: String,
                     @RequestParam("simulatorId", required = false, defaultValue = "") simulatorId: String,
-                    @RequestParam("runner", required = false, defaultValue = "") runner: String
+                    @RequestParam("runner", required = false, defaultValue = "") runner: String,
+                    @RequestParam("noForceFail", required = false, defaultValue = "false") noForceFail: Boolean
     ): NextTestResponse {
 
-        return testRunService.getNextTest(testRunId, simulatorId, runner)
+        return testRunService.getNextTest(testRunId, simulatorId, runner, noForceFail)
     }
 
     @GetMapping("/nextTests/{testRunId}")
@@ -83,9 +84,10 @@ class TestRunController {
         @PathVariable testRunId: String,
         @RequestParam("maxTests", required = false, defaultValue = "0") maxTests: Int,
         @RequestParam("simulatorId", required = false, defaultValue = "") simulatorId: String,
-        @RequestParam("runner", required = false, defaultValue = "") runner: String
+        @RequestParam("runner", required = false, defaultValue = "") runner: String,
+        @RequestParam("noForceFail", required = false, defaultValue = "false") noForceFail: Boolean
     ): NextTestsResponse {
-        return testRunService.getNextTestV2(testRunId, simulatorId, runner, maxTests)
+        return testRunService.getNextTestV2(testRunId, simulatorId, runner, maxTests, noForceFail)
     }
 
     @PostMapping("/nextTests/{testRunId}")
@@ -97,7 +99,8 @@ class TestRunController {
             testRunId,
             request.simulatorId,
             request.runner,
-            request.maxTests
+            request.maxTests,
+            request.noForceFail
         )
     }
 

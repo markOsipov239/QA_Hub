@@ -205,6 +205,17 @@ class TestResultsService {
         }
     }
 
+    fun releaseDevice(testRunId: String, simulatorId: String) = runBlocking {
+        testResultsCollection.updateMany(
+            and(
+                TestResult::testRunId eq testRunId,
+                TestResult::deviceId eq simulatorId,
+                TestResult::status eq TestStatus.PROCESSING.status
+            ),
+            set(TestResult::deviceId setTo "")
+        )
+    }
+
     fun forceStopForDevice(testRunId: String, simulatorId: String, runner: String) = runBlocking {
         val hangingTests = testResultsCollection.find(
             and(TestResult::testRunId eq testRunId,

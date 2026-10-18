@@ -110,7 +110,8 @@ data class NextTestResponse(
 data class NextTestsRequest(
     val maxTests: Int = 0,
     val simulatorId: String = "",
-    val runner: String = ""
+    val runner: String = "",
+    val noForceFail: Boolean = false
 )
 
 data class NextTestsResponse(
