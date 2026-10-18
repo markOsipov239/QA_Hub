@@ -61,26 +61,60 @@ BUILD_TIME=$(date -u '+%Y-%m-%d %H:%M:%S UTC')
 write_build_info "$SCRIPT_DIR/qa_hub_frontend/public/build-info.json"
 write_build_info "$SCRIPT_DIR/qa_hub_backend/src/main/resources/build-info.json"
 
-printf 'Сборка образа ... '
-if run_quiet docker compose build; then
+backend_built=0
+frontend_built=0
+had_error=0
+
+printf 'Сборка образа backend ... '
+if run_quiet docker compose build backend; then
   ok
+  backend_built=1
 else
-  fail "Не удалось собрать образы backend/frontend. Старые контейнеры не тронуты."
+  fail "Не удалось собрать образ backend. Контейнер backend не тронут."
+  had_error=1
+fi
+
+printf 'Сборка образа frontend ... '
+if run_quiet docker compose build frontend; then
+  ok
+  frontend_built=1
+else
+  fail "Не удалось собрать образ frontend. Контейнер frontend не тронут."
+  had_error=1
+fi
+
+if [ "$backend_built" -eq 1 ]; then
+  printf 'Деплой backend ... '
+  if run_quiet docker compose up -d --no-build backend; then
+    ok
+  else
+    fail "Не удалось запустить контейнер backend."
+    had_error=1
+  fi
+fi
+
+if [ "$frontend_built" -eq 1 ]; then
+  printf 'Деплой frontend ... '
+  if run_quiet docker compose up -d --no-build --remove-orphans frontend; then
+    ok
+  else
+    fail "Не удалось запустить контейнер frontend."
+    had_error=1
+  fi
+fi
+
+if [ "$backend_built" -eq 1 ] || [ "$frontend_built" -eq 1 ]; then
+  printf 'Удаление старого ... '
+  if run_quiet docker image prune -f; then
+    ok
+  else
+    fail "Старые образы не удалились."
+    had_error=1
+  fi
+fi
+
+if [ "$had_error" -ne 0 ]; then
   exit 1
 fi
 
-printf 'Деплой образа ... '
-if run_quiet docker compose up -d --remove-orphans; then
-  ok
-else
-  fail "Не удалось запустить новые контейнеры."
-  exit 1
-fi
-
-printf 'Удаление старого ... '
-if run_quiet docker image prune -f; then
-  ok
-else
-  fail "Новые контейнеры запущены, но старые образы не удалились."
-  exit 1
-fi
+printf "${GREEN}Деплой успешно завершен${NC}\n"
