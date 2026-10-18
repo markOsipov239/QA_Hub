@@ -7,7 +7,9 @@ import com.slack.api.model.block.composition.MarkdownTextObject
 import kotlinx.coroutines.*
 import com.mongodb.client.model.FindOneAndUpdateOptions
 import com.mongodb.client.model.ReturnDocument
+import org.bson.conversions.Bson
 import org.litote.kmongo.*
+import org.litote.kmongo.bson
 import org.litote.kmongo.coroutine.aggregate
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -257,14 +259,22 @@ class TestRunService {
                 )
             )
 
+            val avgDurations = getAvgDurationsByFullName(
+                testRun.project,
+                request.testList.map { it.fullName }
+            )
+
             val updateTestResultRequests = request.testList.map {
+                val avgDuration = avgDurations[it.fullName]
                 TestResult(
                     testRunId = testRun.testRunId,
                     testcaseId = it.testId,
                     project = testRun.project,
                     fullName = it.fullName,
                     status = TestStatus.WAITING.status,
-                    title = it.title
+                    title = it.title,
+                    expectedDuration = avgDuration,
+                    neverRun = avgDuration == null
                 )
             }
             if (updateTestResultRequests.isNotEmpty()) {
@@ -298,54 +308,178 @@ class TestRunService {
     }
 
     fun getNextTest(testRunId: String, simulatorId: String = "", runner: String): NextTestResponse = runBlocking {
-        val testRun = getTestRun(testRunId)!!
+        val testRun = prepareNextTestClaim(testRunId, simulatorId, runner)
+        val nextTest = claimNextTest(
+            testRunId = testRunId,
+            retries = testRun.config?.retries ?: 1,
+            simulatorId = simulatorId,
+            runner = runner,
+            sort = descending(TestResult::status)
+        )
 
+        return@runBlocking nextTest?.toNextTestResponse() ?: emptyNextTestResponse()
+    }
+
+    fun getNextTestV2(
+        testRunId: String,
+        simulatorId: String = "",
+        runner: String = "",
+        maxTests: Int = 0
+    ): NextTestsResponse = runBlocking {
+        val testRun = prepareNextTestClaim(testRunId, simulatorId, runner)
+        val retries = testRun.config?.retries ?: 1
+        val queued = testResultsCollection.find(claimableTestFilter(testRunId, retries)).toList()
+        if (queued.isEmpty()) {
+            return@runBlocking NextTestsResponse(tests = emptyList())
+        }
+
+        val fallbackDuration = fallbackTestDuration(queued)
+        val quotaDuration = if (maxTests > 0) {
+            null
+        } else {
+            val remaining = queued.sumOf { resolveTestDuration(it, fallbackDuration) }
+            remaining / activeThreadCount(testRun)
+        }
+        val claimLimit = if (maxTests > 0) maxTests else AUTO_MAX_TESTS
+        val sort = descending(
+            TestResult::neverRun,
+            TestResult::expectedDuration,
+            TestResult::status
+        )
+
+        val claimed = mutableListOf<TestResult>()
+        var accumulatedDuration = 0.0
+
+        while (claimed.size < claimLimit) {
+            val nextTest = claimNextTest(testRunId, retries, simulatorId, runner, sort) ?: break
+            claimed.add(nextTest)
+
+            if (quotaDuration != null) {
+                val duration = resolveTestDuration(nextTest, fallbackDuration)
+                if (claimed.size == 1 && duration >= quotaDuration) {
+                    break
+                }
+                accumulatedDuration += duration
+                if (accumulatedDuration >= quotaDuration) {
+                    break
+                }
+            }
+        }
+
+        return@runBlocking NextTestsResponse(tests = claimed.map { it.toNextTestResponse() })
+    }
+
+    private fun prepareNextTestClaim(testRunId: String, simulatorId: String, runner: String): TestRun {
+        val testRun = getTestRun(testRunId)!!
         if (simulatorId != "") {
             testResultsService.forceStopForDevice(testRunId, simulatorId, runner)
         }
+        return testRun
+    }
 
+    private suspend fun claimNextTest(
+        testRunId: String,
+        retries: Int,
+        simulatorId: String,
+        runner: String,
+        sort: Bson
+    ): TestResult? {
         val nextTest = testResultsCollection.findOneAndUpdate(
-            and(
-                TestResult::testRunId eq testRunId,
-                or(
-                    TestResult::status eq TestStatus.WAITING.status,
-                    and(
-                        TestResult::status eq TestStatus.FAILURE.status,
-                        TestResult::retries lt (testRun.config?.retries ?: 1)
-                    )
-                )
-            ),
-            combine(
-                set(
-                    TestResult::status setTo TestStatus.PROCESSING.status,
-                    TestResult::startDate setTo currentDateTimeUtc(),
-                    TestResult::deviceId setTo simulatorId,
-                    TestResult::runner setTo runner
-                ),
-                inc(TestResult::retries, 1)
-            ),
+            claimableTestFilter(testRunId, retries),
+            claimNextTestUpdate(simulatorId, runner),
             FindOneAndUpdateOptions()
-                .sort(descending(TestResult::status))
+                .sort(sort)
                 .returnDocument(ReturnDocument.AFTER)
-        )
+        ) ?: return null
 
-        if (nextTest != null) {
-            testResultsService.updateTestResult(nextTest)
+        testResultsService.updateTestResult(nextTest)
+        return nextTest
+    }
 
-            return@runBlocking NextTestResponse(
-                nextTest = nextTest.fullName,
-                testId = nextTest.testcaseId,
-                retry = nextTest.retries,
-                title = nextTest.title
+    private fun TestResult.toNextTestResponse() = NextTestResponse(
+        nextTest = fullName,
+        testId = testcaseId,
+        retry = retries,
+        title = title
+    )
+
+    private fun emptyNextTestResponse() = NextTestResponse(
+        nextTest = null,
+        testId = null,
+        retry = null,
+        title = null
+    )
+
+    private fun claimableTestFilter(testRunId: String, retries: Int) = and(
+        TestResult::testRunId eq testRunId,
+        or(
+            TestResult::status eq TestStatus.WAITING.status,
+            and(
+                TestResult::status eq TestStatus.FAILURE.status,
+                TestResult::retries lt retries
             )
+        )
+    )
+
+    private fun claimNextTestUpdate(simulatorId: String, runner: String) = combine(
+        set(
+            TestResult::status setTo TestStatus.PROCESSING.status,
+            TestResult::startDate setTo currentDateTimeUtc(),
+            TestResult::deviceId setTo simulatorId,
+            TestResult::runner setTo runner
+        ),
+        inc(TestResult::retries, 1)
+    )
+
+    private suspend fun getAvgDurationsByFullName(
+        project: String,
+        fullNames: List<String>
+    ): Map<String, Double> {
+        val uniqueNames = fullNames.filter { it.isNotBlank() }.distinct()
+        if (uniqueNames.isEmpty()) {
+            return emptyMap()
         }
 
-        return@runBlocking NextTestResponse(
-            nextTest = null,
-            testId = null,
-            retry = null,
-            title = null
-        )
+        return uniqueNames.chunked(500).flatMap { chunk ->
+            testResultsCollection.aggregate<FullNameAvgDuration>(
+                match(
+                    and(
+                        TestResult::project eq project,
+                        TestResult::fullName `in` chunk,
+                        TestResult::duration ne null,
+                        TestResult::status `in` TestStatus.finalStatuses
+                    )
+                ),
+                """
+                    {
+                      ${'$'}group: {
+                        _id: "${'$'}fullName",
+                        avgDuration: { ${'$'}avg: "${'$'}duration" }
+                      }
+                    }
+                """.trimIndent().bson
+            ).toList()
+        }.associate { it._id to it.avgDuration }
+    }
+
+    private fun fallbackTestDuration(queued: List<TestResult>): Double {
+        val known = queued.mapNotNull { it.expectedDuration }.filter { it > 0 }
+        return if (known.isNotEmpty()) known.average() else DEFAULT_TEST_DURATION_SEC
+    }
+
+    private fun resolveTestDuration(test: TestResult, fallback: Double): Double {
+        return test.expectedDuration?.takeIf { it > 0 } ?: fallback
+    }
+
+    private fun activeThreadCount(testRun: TestRun): Int {
+        val activeRunners = testRun.runners.filter { it.finished == null }
+        val simulatorThreads = activeRunners.sumOf { it.simulators.distinct().size }
+        if (simulatorThreads > 0) {
+            return simulatorThreads
+        }
+
+        val configuredThreads = testRun.config?.parallelThreads ?: 1
+        return maxOf(configuredThreads * maxOf(activeRunners.size, 1), 1)
     }
 
     fun cancelRun(testRunId: String) {
@@ -562,4 +696,14 @@ class TestRunService {
 
         return ClearResponse(deleted, errors, failedTestRuns)
     }
+
+    companion object {
+        private const val AUTO_MAX_TESTS = 20
+        private const val DEFAULT_TEST_DURATION_SEC = 30.0
+    }
 }
+
+private data class FullNameAvgDuration(
+    val _id: String,
+    val avgDuration: Double
+)

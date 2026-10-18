@@ -91,6 +91,8 @@ data class TestResult(
 
     var duration: Double? = null,       //duration of test execution, sended in test result. Usually calculated by test framework.
     var qaHubDuration: Double? = null,  //duration between entering processing status and entering final status on Qa Hub side.
+    var expectedDuration: Double? = null, //avg historical duration in seconds, filled when the test is queued
+    var neverRun: Boolean = false,        //true if the test had no historical duration when queued
 
     var status: String,
     var retries: Int = 0,
