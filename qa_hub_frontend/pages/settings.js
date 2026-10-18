@@ -3,6 +3,7 @@ import ProjectEditor from "../components/settings/projects/ProjectEditor";
 import CicdEditor from "../components/settings/integrations/cicdIntegrations/CicdEditor";
 import TmsEditor from "../components/settings/integrations/tmsIntegrations/TmsEditor";
 import TaskTrackerEditor from "../components/settings/integrations/taskTrackerIntegrations/TaskTrackerEditor";
+import BuildVersionInfo from "../components/settings/BuildVersionInfo";
 import {useEffect} from "react";
 import {getCicdIntegrations, getCicdTypes} from "../requests/integrations/CICDRequests";
 import integrationsState from "../state/integrations/IntegrationsState";
@@ -72,6 +73,7 @@ const Settings = observer(() => {
         <CicdEditor />
         <TmsEditor />
         <TaskTrackerEditor />
+        <BuildVersionInfo />
     </div>
 })
 

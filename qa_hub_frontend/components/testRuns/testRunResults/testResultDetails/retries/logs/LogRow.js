@@ -1,28 +1,22 @@
 import {useEffect, useRef} from "react";
+import styles from "./LogRow.module.css";
 
 export default function LogRow({ line, index, selectedLogRow, ...props }) {
   const ref = useRef(null);
-
+  const isSelected = selectedLogRow === index
 
   useEffect(() => {
-    if (selectedLogRow === index) {
+    if (isSelected) {
       ref.current?.scrollIntoView({ behavior: 'smooth', block: "center" });
     }
-  }, [index, selectedLogRow])
+  }, [isSelected])
 
-  return <div style={{display: 'flex', ...props.style}} ref={ref}>
-    <div style={{ width: '30px', minWidth: '30px', display: 'flex', justifyContent: 'end', marginRight: '15px'}}>
-      <label style={{opacity: '0.4', fontFamily: 'monospace'}}>{index + 1}</label>
-    </div>
-
-    <label
-      style={{
-        whiteSpace: 'break-spaces',
-        fontFamily: 'monospace',
-        backgroundColor: index === selectedLogRow && 'yellow',
-        color: index === selectedLogRow && 'black',
-        lineBreak: 'anywhere'
-      }}
-    >{line}</label>
+  return <div
+    className={styles.row}
+    data-line={index + 1}
+    style={props.style}
+    ref={ref}
+  >
+    <label className={`${styles.line} ${isSelected ? styles.lineSelected : ""}`}>{line}</label>
   </div>
 }
