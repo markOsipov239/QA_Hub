@@ -1,0 +1,27 @@
+.row {
+  display: flex;
+}
+
+.row::before {
+  content: attr(data-line);
+  flex: 0 0 30px;
+  width: 30px;
+  margin-right: 15px;
+  text-align: right;
+  opacity: 0.4;
+  font-family: monospace;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.line {
+  white-space: break-spaces;
+  font-family: monospace;
+  line-break: anywhere;
+  user-select: text;
+}
+
+.lineSelected {
+  background-color: yellow;
+  color: black;
+}
