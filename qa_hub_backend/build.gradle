@@ -18,6 +18,7 @@ buildscript {
         gson_ver = "2.8.6"
         logback_json_ver = "0.1.2"
         slack_api_ver = "1.32.0"
+        springdoc_version = "1.8.0"
     }
 }
 
@@ -60,6 +61,9 @@ dependencies {
     implementation("ch.qos.logback.contrib:logback-jackson:$logback_json_ver")
 
     implementation("com.slack.api:slack-api-client:$slack_api_ver")
+
+    implementation("org.springdoc:springdoc-openapi-ui:$springdoc_version")
+    implementation("org.springdoc:springdoc-openapi-kotlin:$springdoc_version")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test:$spring_version")
 }
