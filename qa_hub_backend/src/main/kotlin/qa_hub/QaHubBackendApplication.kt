@@ -1,5 +1,6 @@
 package qa_hub
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer
 import org.bson.types.ObjectId
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -34,15 +35,18 @@ open class ApplicationConfig: WebMvcConfigurer {
     }
 
     override fun extendMessageConverters(converters: MutableList<HttpMessageConverter<*>?>) {
-        converters.add(0, getJacksonConverter())
-        converters.add(1, ByteArrayHttpMessageConverter())
+        // springdoc отдаёт /v3/api-docs* как byte[]. Если Jackson стоит раньше,
+        // он сериализует массив байт в JSON-строку (base64), и Swagger UI не парсит спеку.
+        converters.removeIf { it is ByteArrayHttpMessageConverter }
+        converters.add(0, ByteArrayHttpMessageConverter())
+
+        converters.filterIsInstance<MappingJackson2HttpMessageConverter>().forEach { converter ->
+            converter.objectMapper = jacksonObjectMapper()
+        }
     }
 
     //Converting mongo object id as string
-    private fun getJacksonConverter(): MappingJackson2HttpMessageConverter {
-        val builder = Jackson2ObjectMapperBuilder()
-
-        builder.serializerByType(ObjectId::class.java, ToStringSerializer())
-        return MappingJackson2HttpMessageConverter(builder.build())
-    }
+    private fun jacksonObjectMapper(): ObjectMapper = Jackson2ObjectMapperBuilder()
+        .serializerByType(ObjectId::class.java, ToStringSerializer())
+        .build<ObjectMapper>()
 }
