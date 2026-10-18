@@ -8,7 +8,7 @@ export default function TaskStatus({status, color, ...props}) {
       style={{
         padding: '2px 6px',
         backgroundColor: color === 'green' ? statusColors.green : color === 'yellow' ? statusColors.yellow : status === defaultStatus ? statusColors.unknown : statusColors.other,
-        marginLeft: '10px',
+        marginLeft: props.style?.marginLeft ?? '10px',
         borderRadius: '5px',
         display: 'grid',
         alignContent: 'center',

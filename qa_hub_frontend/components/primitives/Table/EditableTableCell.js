@@ -25,10 +25,10 @@ export default function EditableTableCell({ content, value, afterContent, onChan
         }
     }
 
-    const readOnlyContent = <div style={{display: "flex", alignItems: "center", position: 'relative'}} onDoubleClick={handleDoubleClick}>
-        <div style={{display: 'flex', alignItems: 'center', position: 'relative'}}>
+    const readOnlyContent = <div style={{display: "flex", alignItems: "center", position: 'relative', width: '100%'}} onDoubleClick={handleDoubleClick}>
+        <div style={{display: 'flex', alignItems: 'center', position: 'relative', width: '100%'}}>
             <div style={{display: 'flex', maxWidth: 'max-content', ...contentStyle}}>
-                <label style={{}}>{ content }</label>
+                <label style={{display: 'block', width: '100%'}}>{ content }</label>
             </div>
             { afterContent }
 

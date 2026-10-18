@@ -22,13 +22,26 @@ const TaskStatusCell = observer(({blockedTest, onChangeCallback, onBlurCallback,
 
   return <EditableTableCell
     value={blockedTest.tmsTask}
-    content={<TaskLink blockedTest={blockedTest} taskUrl={taskTrackerInfo.taskUrl}/>}
+    content={
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr 10px 1fr',
+        alignItems: 'center',
+        width: '100%'
+      }}>
+        <div style={{display: 'flex', justifyContent: 'flex-end', minWidth: 0}}>
+          <TaskLink blockedTest={blockedTest} taskUrl={taskTrackerInfo.taskUrl}/>
+        </div>
+        <div />
+        <div style={{display: 'flex', justifyContent: 'flex-start', minWidth: 0}}>
+          <TaskStatus status={status} color={color} style={{marginLeft: 0}}/>
+        </div>
+      </div>
+    }
     contentStyle={{
-      maxWidth: '180px',
-      minWidth: '80px',
-      justifyContent: 'end'
+      width: '100%',
+      maxWidth: '100%'
     }}
-    afterContent={<TaskStatus status={status} color={color} style={{flexGrow: '1.1', maxWidth: '50%', minWidth: 'max-content'}}/>}
     onChangeCallback={ onChangeCallback }
     onBlurCallback={ onBlurCallback }
     {...props}
