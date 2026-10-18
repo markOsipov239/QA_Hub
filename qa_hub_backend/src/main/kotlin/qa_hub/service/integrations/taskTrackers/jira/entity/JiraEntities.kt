@@ -20,16 +20,6 @@ data class JiraStatusCategory(
     val name: String
 )
 
-data class JiraSearchRequest(
-    val jql: String,
-    val fields: List<String> = listOf("status"),
-    val maxResults: Int
-)
-
-data class JiraSearchResponse(
-    val issues: List<JiraIssue> = listOf()
-)
-
 class JiraIssueResponse(jiraIssue: JiraIssue) {
     var key: String? = null
     var statusName: String? = null
