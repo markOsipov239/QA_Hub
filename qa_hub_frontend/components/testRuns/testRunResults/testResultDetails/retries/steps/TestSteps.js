@@ -5,7 +5,7 @@ export default function TestSteps({ steps, margin, setSelectedStep, ...props }) 
     {
       steps.map((step, index) => {
         return <TestStep
-          key={index}
+          key={step.id ?? index}
           step={step}
           margin={margin}
           setSelectedStep={setSelectedStep}         

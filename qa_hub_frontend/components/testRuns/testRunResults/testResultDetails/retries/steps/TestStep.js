@@ -28,7 +28,10 @@ export default function TestStep({step, margin, setSelectedStep, ...props}) {
             height: iconSize,
             width: iconSize,
           }}
-          onClick={ () => { setExpanded(!expanded)}}
+          onClick={(e) => {
+            e.stopPropagation()
+            setExpanded(!expanded)
+          }}
         >
           <PlayArrowIcon style={{
             height: iconSize,
@@ -70,7 +73,10 @@ export default function TestStep({step, margin, setSelectedStep, ...props}) {
           display: 'flex',
           cursor: 'pointer'
         }}
-        onClick={() => { selectStep(step.id) }}
+        onClick={(e) => {
+          e.stopPropagation()
+          selectStep()
+        }}
         onMouseEnter={() => {setHovered(true)}}
         onMouseLeave={() => {setHovered(false)}}
       >
