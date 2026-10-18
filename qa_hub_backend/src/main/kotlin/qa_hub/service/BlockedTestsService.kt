@@ -70,6 +70,20 @@ class BlockedTestsService {
         return@runBlocking taskTrackerService?.getTaskStatus(task)
     }
 
+    fun getTaskStatuses(project: String, tasks: List<String>): List<TaskStatusResponse> = runBlocking {
+        val uniqueTasks = tasks.map { it.trim() }.filter { it.isNotEmpty() }.distinct()
+        if (uniqueTasks.isEmpty()) {
+            return@runBlocking emptyList()
+        }
+
+        val taskTrackerInfo = projectIntegrationsService
+            .getProjectTaskTrackerInt(project)
+
+        val taskTrackerService = taskTrackerInfo.taskTrackerInfo?.taskTrackerService()
+
+        return@runBlocking taskTrackerService?.getTaskStatuses(uniqueTasks) ?: emptyList()
+    }
+
     fun blockTest(blockedTest: BlockedTest): UpdateResult = runBlocking {
         val blockDate = currentDateTimeUtc()
         blockedTest.blockDate = blockDate

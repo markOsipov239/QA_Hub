@@ -1,36 +1,45 @@
 import EditableTableCell from "../primitives/Table/EditableTableCell";
-import {useEffect, useState} from "react";
-import {getTaskStatus} from "../../requests/BlockerRequests";
 import {observer} from "mobx-react-lite";
 import projectIntegrationsState from "../../state/integrations/ProjectIntegrationsState";
+import blockerState from "../../state/BlockerState";
 import TaskLink from "./TaskLink";
 import TaskStatus from "./TaskStatus";
 
 
 const TaskStatusCell = observer(({blockedTest, onChangeCallback, onBlurCallback, ...props}) => {
-  const [status, setStatus] = useState(null)
-  const [color, setColor] = useState(null)
   const taskTrackerInfo = projectIntegrationsState.taskTrackerInt || {}
+  const statusInfo = blockerState.taskStatuses[blockedTest.tmsTask] || {}
 
-  useEffect(() => {
-    getTaskStatus(blockedTest.project, blockedTest.tmsTask).then((data) => {
-      setStatus(data?.data?.statusInfo?.statusName)
-      setColor(data?.data?.statusInfo?.statusColor || null)
-    })
-  }, [blockedTest.tmsTask])
+  const handleBlur = () => {
+    blockerState.ensureTaskStatus(blockedTest.project, blockedTest.tmsTask)
+    onBlurCallback?.()
+  }
 
 
   return <EditableTableCell
     value={blockedTest.tmsTask}
-    content={<TaskLink blockedTest={blockedTest} taskUrl={taskTrackerInfo.taskUrl}/>}
+    content={
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr 10px 1fr',
+        alignItems: 'center',
+        width: '100%'
+      }}>
+        <div style={{display: 'flex', justifyContent: 'flex-end', minWidth: 0}}>
+          <TaskLink blockedTest={blockedTest} taskUrl={taskTrackerInfo.taskUrl}/>
+        </div>
+        <div />
+        <div style={{display: 'flex', justifyContent: 'flex-start', minWidth: 0}}>
+          <TaskStatus status={statusInfo.statusName} color={statusInfo.statusColor} style={{marginLeft: 0}}/>
+        </div>
+      </div>
+    }
     contentStyle={{
-      maxWidth: '180px',
-      minWidth: '80px',
-      justifyContent: 'end'
+      width: '100%',
+      maxWidth: '100%'
     }}
-    afterContent={<TaskStatus status={status} color={color} style={{flexGrow: '1.1', maxWidth: '50%', minWidth: 'max-content'}}/>}
     onChangeCallback={ onChangeCallback }
-    onBlurCallback={ onBlurCallback }
+    onBlurCallback={ handleBlur }
     {...props}
   />
 })

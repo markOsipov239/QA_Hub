@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import qa_hub.entity.BlockedTestHistoryItem
 import qa_hub.service.integrations.taskTrackers.TaskStatusResponse
+import qa_hub.service.integrations.taskTrackers.TaskStatusesRequest
 import java.lang.Exception
 
 @RestController
@@ -50,6 +51,18 @@ class BlockedTestsController {
             blockedTestsService.getTaskStatus(project, task)
         } catch (e: Exception) {
             null
+        }
+    }
+
+    @PostMapping("/{project}/taskStatuses")
+    fun getTaskStatuses(
+        @PathVariable project: String,
+        @RequestBody body: TaskStatusesRequest
+    ): List<TaskStatusResponse> {
+        return try {
+            blockedTestsService.getTaskStatuses(project, body.tasks)
+        } catch (e: Exception) {
+            emptyList()
         }
     }
 

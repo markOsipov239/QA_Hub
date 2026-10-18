@@ -1,6 +1,6 @@
 import Typography from "@mui/material/Typography";
 import {customTheme} from "../../../styles/CustomTheme";
-import {blockTest, getTaskStatus, unblockTest} from "../../../requests/BlockerRequests";
+import {blockTest, unblockTest} from "../../../requests/BlockerRequests";
 import StyledTooltip from "../../primitives/StyledTooltip";
 import CustomIconButton from "../../primitives/CustomIconButton";
 import UndoIcon from "@mui/icons-material/Undo";
@@ -30,16 +30,13 @@ const SelectedBlockedTest = observer(({selectedItem, setSelectedItem, history, r
   const [blockedTest, setBlockedTest] = useState(null)
   const [isBlocked, setIsBlocked] = useState(false)
 
-  const [status, setStatus] = useState(null)
-  const [color, setColor] = useState(null)
   const taskTrackerInfo = projectIntegrationsState.taskTrackerInt || {}
+  const selectedTask = selectedItem?.blockedTest?.tmsTask
+  const statusInfo = blockerState.taskStatuses[selectedTask] || {}
 
   useEffect(() => {
-    if (selectedItem) {
-      getTaskStatus(selectedItem.blockedTest.project, selectedItem.blockedTest.tmsTask).then((data) => {
-        setStatus(data?.data?.statusInfo?.statusName || null)
-        setColor(data?.data?.statusInfo?.statusColor || null)
-      })
+    if (selectedItem?.blockedTest) {
+      blockerState.ensureTaskStatus(selectedItem.blockedTest.project, selectedItem.blockedTest.tmsTask)
     }
   }, [selectedItem])
 
@@ -121,7 +118,7 @@ const SelectedBlockedTest = observer(({selectedItem, setSelectedItem, history, r
         </div>
 
         <div style={{display: 'flex', alignItems: 'center', width:'max-content', marginLeft: '15px'}}>
-          <TaskStatus status={status} color={color} />
+          <TaskStatus status={statusInfo.statusName} color={statusInfo.statusColor} />
           <TaskLink blockedTest={selectedItem.blockedTest} taskUrl={taskTrackerInfo.taskUrl} style={{width:'max-content', marginLeft: '3px'}}/>
         </div>
       </div>

@@ -9,6 +9,7 @@ export default function TaskLink({blockedTest, taskUrl, ...props}) {
     rel="noreferrer"
     style={{
       padding: '5px',
+      whiteSpace: 'nowrap',
       backgroundColor: hover && `rgba(255, 255, 255, 0.1)`,
       ...props.style
     }}

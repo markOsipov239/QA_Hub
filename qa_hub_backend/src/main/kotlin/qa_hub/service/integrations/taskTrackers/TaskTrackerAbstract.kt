@@ -47,8 +47,21 @@ data class TaskStatusResponse(
     val statusInfo: TaskStatusInfo
 )
 
+data class TaskStatusesRequest(
+    val tasks: List<String> = listOf()
+)
+
 abstract class TaskTrackerIntegrationAbstract(val info: TaskTrackerInfo) {
     abstract fun getTaskStatus(task: String): TaskStatusResponse
 
+    open fun getTaskStatuses(tasks: List<String>): List<TaskStatusResponse> {
+        return tasks.mapNotNull { task ->
+            try {
+                getTaskStatus(task)
+            } catch (_: Exception) {
+                null
+            }
+        }
+    }
 }
 
