@@ -43,7 +43,7 @@ function LogViewer() {
 
         if (logFilter.search) {
             filtered = filtered.filter(logEntry => {
-                return logEntry.message.includes(logFilter.search)
+                return (logEntry.message ?? "").includes(logFilter.search)
             })
         }
 

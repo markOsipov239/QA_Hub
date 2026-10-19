@@ -20,6 +20,7 @@ buildscript {
         slack_api_ver = "1.32.0"
         springdoc_version = "1.8.0"
     }
+
 }
 
 plugins {
@@ -36,6 +37,24 @@ java.sourceCompatibility = JavaVersion.VERSION_11
 
 repositories {
     mavenCentral()
+}
+
+// springdoc 1.8 pulls Jackson 2.16 and SLF4J 2.x; Boot 2.7 needs Jackson 2.13 + SLF4J 1.7
+// (logback 1.2 does not work with SLF4J 2 → log files stay empty)
+configurations.configureEach {
+    resolutionStrategy.eachDependency { details ->
+        if (details.requested.group == 'com.fasterxml.jackson.core' ||
+            details.requested.group == 'com.fasterxml.jackson.module' ||
+            details.requested.group == 'com.fasterxml.jackson.datatype' ||
+            details.requested.group == 'com.fasterxml.jackson.dataformat') {
+            details.useVersion('2.13.5')
+            details.because('Keep Jackson aligned with Spring Boot 2.7')
+        }
+        if (details.requested.group == 'org.slf4j') {
+            details.useVersion('1.7.36')
+            details.because('logback 1.2 is incompatible with SLF4J 2.x')
+        }
+    }
 }
 
 dependencies {
@@ -64,6 +83,7 @@ dependencies {
 
     implementation("org.springdoc:springdoc-openapi-ui:$springdoc_version")
     implementation("org.springdoc:springdoc-openapi-kotlin:$springdoc_version")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test:$spring_version")
 }

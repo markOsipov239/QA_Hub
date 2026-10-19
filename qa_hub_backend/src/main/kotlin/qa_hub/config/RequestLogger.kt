@@ -16,6 +16,13 @@ import javax.servlet.http.HttpServletResponse
 @Component
 class LoggingFilterBean : GenericFilterBean() {
     override fun doFilter(request: ServletRequest, response: ServletResponse, chain: FilterChain) {
+        val httpRequest = request as HttpServletRequest
+        // Do not wrap /logs: response can be large and must not depend on content caching.
+        if (httpRequest.servletPath.contains("/api/utils/logs")) {
+            chain.doFilter(request, response)
+            return
+        }
+
         try {
             val requestWrapper = requestWrapper(request)
             val responseWrapper = responseWrapper(response)
@@ -32,7 +39,7 @@ class LoggingFilterBean : GenericFilterBean() {
                 responseWrapper.copyBodyToResponse()
             }
         } catch (e: Exception) {
-            error(e)
+            log.error("Request logging filter failed", e)
         }
     }
 
@@ -80,7 +87,6 @@ class LoggingFilterBean : GenericFilterBean() {
                     log.info(result)
                 }
             }
-            response.copyBodyToResponse()
         } catch (e: Exception) {
             log.warn("Can't log response")
         }
