@@ -80,7 +80,6 @@ class LoggingFilterBean : GenericFilterBean() {
                     log.info(result)
                 }
             }
-            response.copyBodyToResponse()
         } catch (e: Exception) {
             log.warn("Can't log response")
         }
