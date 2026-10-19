@@ -107,14 +107,14 @@ class GeneralStatsHelper {
                 {
                     ${'$'}addFields: {
                         successTestResultRate: {
-                            "${'$'}cond: [
+                            "${'$'}cond": [
                                 { "${'$'}gt": ["${'$'}totalTestResults", 0] },
                                 { "${'$'}divide": ["${'$'}successTestResults", "${'$'}totalTestResults"] },
                                 0
                             ]
                         },
                         successTestRetryRate: {
-                            "${'$'}cond: [
+                            "${'$'}cond": [
                                 { "${'$'}gt": ["${'$'}totalRetries", 0] },
                                 { "${'$'}divide": ["${'$'}successTestResults", "${'$'}totalRetries"] },
                                 0
