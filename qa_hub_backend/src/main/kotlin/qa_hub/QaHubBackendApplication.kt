@@ -1,6 +1,7 @@
 package qa_hub
 
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer
+import com.fasterxml.jackson.module.kotlin.kotlinModule
 import org.bson.types.ObjectId
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
@@ -43,8 +44,9 @@ open class ApplicationConfig: WebMvcConfigurer {
     //Converting mongo object id as string
     private fun getJacksonConverter(): MappingJackson2HttpMessageConverter {
         val builder = Jackson2ObjectMapperBuilder()
+            .modulesToInstall(kotlinModule())
+            .serializerByType(ObjectId::class.java, ToStringSerializer())
 
-        builder.serializerByType(ObjectId::class.java, ToStringSerializer())
         return MappingJackson2HttpMessageConverter(builder.build())
     }
 }

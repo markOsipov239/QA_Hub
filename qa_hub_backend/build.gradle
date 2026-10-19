@@ -20,6 +20,7 @@ buildscript {
         slack_api_ver = "1.32.0"
         springdoc_version = "1.8.0"
     }
+
 }
 
 plugins {
@@ -36,6 +37,19 @@ java.sourceCompatibility = JavaVersion.VERSION_11
 
 repositories {
     mavenCentral()
+}
+
+// springdoc 1.8 pulls Jackson 2.16; Boot 2.7 + logback-jackson expect 2.13.x
+configurations.configureEach {
+    resolutionStrategy.eachDependency { details ->
+        if (details.requested.group == 'com.fasterxml.jackson.core' ||
+            details.requested.group == 'com.fasterxml.jackson.module' ||
+            details.requested.group == 'com.fasterxml.jackson.datatype' ||
+            details.requested.group == 'com.fasterxml.jackson.dataformat') {
+            details.useVersion('2.13.5')
+            details.because('Keep Jackson aligned with Spring Boot 2.7')
+        }
+    }
 }
 
 dependencies {
@@ -64,6 +78,7 @@ dependencies {
 
     implementation("org.springdoc:springdoc-openapi-ui:$springdoc_version")
     implementation("org.springdoc:springdoc-openapi-kotlin:$springdoc_version")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test:$spring_version")
 }
