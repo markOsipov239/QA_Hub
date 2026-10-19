@@ -11,18 +11,18 @@ import org.litote.kmongo.*
 import qa_hub.entity.testRun.*
 
 data class GeneralStats(
-    val fullName: String,
-    val testcaseId: String,
-    val totalTestResults: Int,
-    val avgDuration: Double,
-    val avgRetries: Double,
-    val finalStatus: String,
-    var avgRetryDuration: Double,
-    val totalRetries:Int,
-    val successTestResults: Int,
-    val successRate: Double,
-    val successTestResultRate: Double,
-    val successTestRetryRate: Double,
+    val totalTests: Int = 0,
+    val totalTestResults: Int = 0,
+    val successTestResults: Int = 0,
+    val totalRetries: Int = 0,
+    val avgTestRetries: Double = 0.0,
+    val successTestResultRate: Double = 0.0,
+    val successTestRetryRate: Double = 0.0,
+    var avgRetryDuration: Double = 0.0,
+)
+
+data class RetryDurationStats(
+    val avgRetryDuration: Double = 0.0,
 )
 
 @Service
@@ -64,6 +64,10 @@ class GeneralStatsHelper {
     }
 
     private fun getTestResultsGeneralStats(request: TestStatsRequest, testRunIds: List<String>): GeneralStats = runBlocking {
+        if (testRunIds.isEmpty()) {
+            return@runBlocking GeneralStats()
+        }
+
         val pipeline: MutableList<String> = mutableListOf(
             getTestResultFilter(request, testRunIds),
             """
@@ -71,11 +75,10 @@ class GeneralStatsHelper {
                     ${'$'}group: {
                         _id: "${'$'}fullName",
                         fullName: { ${'$'}first: "${'$'}fullName"},
-                        testcaseId: { ${'$'}last: "${'$'}testcaseId"},                     
+                        testcaseId: { ${'$'}last: "${'$'}testcaseId"},
                         totalTestResults: {${'$'}sum: 1},
-                        avgDuration: { ${'$'}avg: "${'$'}duration"},
                         avgRetries: { ${'$'}avg: "${'$'}retries"},
-                        totalRetries: { ${'$'}sum: "${'$'}retries"},      
+                        totalRetries: { ${'$'}sum: "${'$'}retries"},
                         successTestResults : {
                              ${'$'}sum: {
                                  ${'$'}cond: {
@@ -83,57 +86,57 @@ class GeneralStatsHelper {
                                     then: 1,
                                     else: 0
                                 }
-                            } 
+                            }
                         }
                     }
                 }
             """.trimIndent(),
             """
                 {
-                    ${'$'}addFields: {
-                        "successRate" : {
-                            "${'$'}divide": ["${'$'}successRuns", "${'$'}totalRuns"]
-                        }
-                    }
- 	            }
-            """.trimIndent()
-        )
-
-        pipeline.add(
-            """
-                {
                     ${'$'}group: {
                         _id: "stats",
-                        totalTests: {${'$'}sum: 1}
-                        totalTestResults: {${'$'}sum: "${'$'}totalTestResults"},                       
+                        totalTests: {${'$'}sum: 1},
+                        totalTestResults: {${'$'}sum: "${'$'}totalTestResults"},
                         successTestResults: {${'$'}sum: "${'$'}successTestResults"},
-                        totalRetries: { ${'$'}sum: "${'$'}totalRetries"},                        
-                        avgTestRetries: { ${'$'}avg: "${'$'}avgRetries"},
+                        totalRetries: { ${'$'}sum: "${'$'}totalRetries"},
+                        avgTestRetries: { ${'$'}avg: "${'$'}avgRetries"}
                     }
                 }
-            """.trimIndent()
-        )
-        pipeline.add(
+            """.trimIndent(),
             """
                 {
                     ${'$'}addFields: {
                         successTestResultRate: {
-                            "${'$'}divide": ["${'$'}successTestResults", "${'$'}totalTestResults"]
-                        }
-                        "successTestRetryRate": {
-                            "${'$'}divide": ["${'$'}successTestResults", "${'$'}totalRetries"]
+                            "${'$'}cond: [
+                                { "${'$'}gt": ["${'$'}totalTestResults", 0] },
+                                { "${'$'}divide": ["${'$'}successTestResults", "${'$'}totalTestResults"] },
+                                0
+                            ]
+                        },
+                        successTestRetryRate: {
+                            "${'$'}cond: [
+                                { "${'$'}gt": ["${'$'}totalRetries", 0] },
+                                { "${'$'}divide": ["${'$'}successTestResults", "${'$'}totalRetries"] },
+                                0
+                            ]
                         }
                     }
  	            }
             """.trimIndent()
         )
-        println(pipeline)
-        val generalStats = testResultsCollection.aggregate<GeneralStats>(*pipeline.toTypedArray()).toList().first()
 
-        return@runBlocking generalStats
+        return@runBlocking testResultsCollection
+            .aggregate<GeneralStats>(*pipeline.toTypedArray())
+            .toList()
+            .firstOrNull()
+            ?: GeneralStats()
     }
 
-    private fun getTestResultsRetriesGeneralStats(request: TestStatsRequest, testRunIds: List<String>): GeneralStats = runBlocking {
+    private fun getTestResultsRetriesGeneralStats(request: TestStatsRequest, testRunIds: List<String>): RetryDurationStats = runBlocking {
+        if (testRunIds.isEmpty()) {
+            return@runBlocking RetryDurationStats()
+        }
+
         val pipeline: MutableList<String> = mutableListOf(
             getTestResultFilter(request, testRunIds),
             """
@@ -153,7 +156,7 @@ class GeneralStatsHelper {
             """
                 {
                     ${'$'}match: {
-                        duration: { ${'$'}ne: null}                            
+                        duration: { ${'$'}ne: null}
                     }
                 }
             """.trimIndent(),
@@ -161,16 +164,17 @@ class GeneralStatsHelper {
                 {
                     ${'$'}group: {
                         _id: "stats",
-                        avgRetryDuration: { ${'$'}avg: "${'$'}duration" }                        
+                        avgRetryDuration: { ${'$'}avg: "${'$'}duration" }
                     }
                 }
             """.trimIndent()
         )
 
-        println(pipeline)
-        val generalStats = testResultsRetriesCollection.aggregate<GeneralStats>(*pipeline.toTypedArray()).toList().first()
-
-        return@runBlocking generalStats
+        return@runBlocking testResultsRetriesCollection
+            .aggregate<RetryDurationStats>(*pipeline.toTypedArray())
+            .toList()
+            .firstOrNull()
+            ?: RetryDurationStats()
     }
 
     fun getGeneralStats(request: TestStatsRequest): GeneralStats = runBlocking {
